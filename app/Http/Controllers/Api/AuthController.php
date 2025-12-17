@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -19,7 +20,7 @@ class AuthController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
-            'role'     => 'required|in:leader,member',
+            'role'     => 'required|in:leader,member,admin',
         ]);
 
         $user = User::create([
@@ -82,15 +83,23 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 
-    //moi added
-    public function update(Request $request, $id)
+    //moi added :: L’utilisateur modifie SON profil seulement
+    public function update(Request $request)
     {
-        $user = User::findOrFail($id);
+        $user = $request->user();
 
-        $validated = $request->validate([
+        /*$validated = $request->validate([
             'name'  => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
-            'role'  => 'sometimes|required|in:leader,member,admin',
+        ]);*/
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => [
+                'sometimes',
+                'required',
+                'email',
+                Rule::unique('users')->ignore($user->id),
+            ],
         ]);
 
         $user->update($validated);
