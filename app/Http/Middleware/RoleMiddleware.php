@@ -8,20 +8,48 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, ...$roles): Response
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string  $roles  // multiple roles separated by comma
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next, string $roles): Response
     {
-        $user = $request->user();
-
-        // Utilisateur non authentifié
-        if (! $user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+        // 1️ Vérifier si l'utilisateur est connecté
+        if (! auth()->check()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated'], 401);
+            }
+            return redirect()->route('login')->with('error', 'Vous devez être connecté');
         }
 
-        // Vérification du rôle
-        if (! in_array($user->role, $roles)) {
-            return response()->json([
-                'message' => 'Forbidden - insufficient role'
-            ], 403);
+        $user = auth()->user();
+
+        // 2️ Gérer plusieurs rôles
+        $rolesArray = array_map('trim', explode(',', $roles));
+
+        // Vérification rôle Spatie ou champ role simple
+        $hasRole = false;
+
+        if (method_exists($user, 'hasRole')) {
+            foreach ($rolesArray as $role) {
+                if ($user->hasRole($role)) {
+                    $hasRole = true;
+                    break;
+                }
+            }
+        } else {
+            $hasRole = in_array($user->role, $rolesArray);
+        }
+
+        if (! $hasRole) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Access denied'], 403);
+            }
+            return redirect()->route('home')->with('error', 'Accès refusé');
         }
 
         return $next($request);

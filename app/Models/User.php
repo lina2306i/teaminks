@@ -66,4 +66,15 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+    //spint 2 : relation with teams
+     // équipes du user
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class)
+                    ->withPivot('status')
+                    ->withTimestamps();
+    }
+
+
 }

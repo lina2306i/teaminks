@@ -69,7 +69,7 @@
                                 <select name="role" id="role"class="form-select @error('role') is-invalid @enderror" required>
                                     <option value="">-- Choose role --</option>
                                     <option value="leader" {{ old('role') == 'leader' ? 'selected' : '' }}>Leader</option>
-                                    <option value="member" {{ old('role') == 'member' ? 'selected' : '' }}>Member</option>
+                                    <option value="member" {{ old(key: 'role') == 'member' ? 'selected' : '' }}>Member</option>
                                 </select>
 
                                 @error('role')
