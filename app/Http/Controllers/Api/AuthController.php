@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -30,18 +31,24 @@ class AuthController extends Controller
             'role'     => $validated['role'],
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        /*$token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'User registered successfully',
             'user'    => $user,
             'token'   => $token,
-        ], 201);
+        ], 201);*/
+        // login auto après register
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('home');
     }
 
     // LOGIN
     public function login(Request $request)
     {
+        /* api return json
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required',
@@ -65,16 +72,38 @@ class AuthController extends Controller
             'user'    => $user,
             'token'   => $token,
         ]);
+        */
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (! Auth::attempt($credentials)) {
+            return back()->withErrors([
+                'email' => 'Invalid credentials',
+            ]);
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()->route('home');
     }
 
     // LOGOUT
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        /*$request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Logged out successfully'
         ]);
+        */
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login');
     }
 
     // PROFILE

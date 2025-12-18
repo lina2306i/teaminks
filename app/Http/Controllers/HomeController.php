@@ -8,7 +8,7 @@ class HomeController extends Controller
 {
     /**
      * Create a new controller instance.
-     *
+     * i dont needed auth for home page
      * @return void
      */
     public function __construct()

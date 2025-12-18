@@ -61,6 +61,25 @@
                             </div>
                         </div>
 
+                        <div class="row mb-3">
+                            <label for="role" class="col-md-4 col-form-label text-md-end">{{ __('Role') }}</label>
+
+                            <!-- added role selection or mybe well be added by admin who choose them role will be -->
+                            <div class="col-md-6">
+                                <select name="role" id="role"class="form-select @error('role') is-invalid @enderror" required>
+                                    <option value="">-- Choose role --</option>
+                                    <option value="leader" {{ old('role') == 'leader' ? 'selected' : '' }}>Leader</option>
+                                    <option value="member" {{ old('role') == 'member' ? 'selected' : '' }}>Member</option>
+                                </select>
+
+                                @error('role')
+                                    <span class="invalid-feedback">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+                        </div>
+
                         <div class="row mb-0">
                             <div class="col-md-6 offset-md-4">
                                 <button type="submit" class="btn btn-primary">
