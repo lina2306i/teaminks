@@ -2,7 +2,7 @@
     <div class="container">
         <!-- Logo + Nom de l'app -->
         <a class="navbar-brand d-flex align-items-center text-white fw-bold" href="{{ url('home') }}">
-            <img src="{{ asset('images/logo-v0.7.1.jpg') }}" alt="Team logo" class="me-2" style="height: 38px;">
+            <img src="{{ asset('images/logo5-ssbg.png') }}" alt="Team logo" class="me-2" style="height: 65px;">
             <span class="fs-4 d-none d-md-block fw-bold">Teaminks</span>
         </a>
 

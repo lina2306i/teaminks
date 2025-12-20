@@ -47,7 +47,7 @@
                     <i class="fab fa-linkedin"></i>
                 </a>
             </div>
-            <p class="text-gray-400 mb-0">&copy; 2025 Team Link. All rights reserved.</p>
+            <p class="text-gray-400 mb-0">&copy; 2026 - Teaminks. All rights reserved.</p>
         </div>
     </footer>
 
