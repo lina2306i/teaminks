@@ -13,6 +13,10 @@ Route::get('/', function () {
 /*Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');*/
 
+//window home route
+Route::get('/win', function () {
+    return view('windoHome');
+})->name('home');
 
 //spint 1 : auth routes
 //frontend ::

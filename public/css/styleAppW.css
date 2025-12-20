@@ -1,0 +1,77 @@
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(to bottom right, #0f172a, #5e437a, #111827);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero-section {
+            flex: 1;
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #60a5fa, #a78bfa, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 6s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .feature-card {
+            background: linear-gradient(to bottom right, #c9711f, #1e40af);
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .collaboration-card {
+            background: linear-gradient(to bottom right, #6e6bd6, #2e65b2);
+        }
+
+        footer {
+            background: linear-gradient(to right, #0f172a, #5e437a, #0f172a);
+            padding: 30px 0;
+            border-top: 1px solid #374151;
+        }
+
+        .btn-explore {
+            background: #2563eb;
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+
+        .btn-contact {
+            background: linear-gradient(to right, #9333ea, #ec4899);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+
+        .icon-bounce {
+            animation: bounce 2s infinite;
+            color:whitesmoke;
+
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+
+        }
