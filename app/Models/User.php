@@ -25,6 +25,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'position',
+        'birthdate',
     ];
 
 
@@ -74,6 +76,34 @@ class User extends Authenticatable
         return $this->belongsToMany(Team::class)
                     ->withPivot('status')
                     ->withTimestamps();
+    }
+
+    // Relations avec d'autres modèles for leader interface ::
+    public function teamsAsLeader()
+    {
+        return $this->hasMany(Team::class, 'leader_id');
+    }
+
+    public function teamsAsMember()
+    {
+        return $this->belongsToMany(Team::class, 'team_members')
+                    ->withPivot('status') // pending ou accepted
+                    ->withTimestamps();
+    }
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class, 'leader_id');
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'assigned_to');
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
     }
 
 

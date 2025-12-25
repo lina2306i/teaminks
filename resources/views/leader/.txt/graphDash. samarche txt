@@ -1,0 +1,275 @@
+        <hr class="border-gray-600 my-5">
+        <!-- Graphiques -->
+        <!-- Graphiques (sans Chart.js - CSS pur) -->
+        <div class="row g-4 mb-5 justify-content-center">
+            <!-- Tâches complétées par jour (7 derniers jours) -->
+            <div class="col-lg-6">
+                <div class="card bg-gray-800 text-white shadow-lg border-0 rounded-3 overflow-hidden">
+                    <div class="card-header fw-bold bg-gray-900 py-3">
+                        Tâches complétées par jour (7 derniers jours)
+                    </div>
+                    <div class="card-body p-4">
+                        @if(empty($completedTasks_labels) || count($completedTasks_labels) === 0)
+                            <div class="text-center text-gray-400 py-5">
+                                <i class="fas fa-chart-line fa-4x mb-3 opacity-50"></i>
+                                <p>Aucune tâche complétée récemment.</p>
+                            </div>
+                        @else
+                            <div class="space-y-4">
+                                @foreach($completedTasks_labels as $index => $day)
+                                    @php
+                                        $value = $completedTasks_values[$index] ?? 0;
+                                        $max = max($completedTasks_values);
+                                        $percentage = $max > 0 ? ($value / $max) * 100 : 0;
+                                    @endphp
+                                    <div class="flex items-center gap-4">
+                                        <span class="w-16 text-sm text-gray-300">{{ $day }}</span>
+                                        <div class="flex-1 bg-gray-700 rounded-full h-10 overflow-hidden relative">
+                                            <div class="h-full bg-gradient-to-r from-blue-500 to-blue-700 rounded-full transition-all duration-1000 ease-out"
+                                                 style="width: {{ $percentage }}%"></div>
+                                            <span class="absolute inset-0 flex items-center justify-end px-3 text-sm font-medium">
+                                                {{ $value }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Membres les plus actifs -->
+             <div class="col-lg-6">
+                <div class="card bg-gray-800 text-white shadow-lg border-0 rounded-3 overflow-hidden">
+                    <div class="card-header fw-bold bg-gray-900 py-3">
+                        Membres les plus actifs
+                    </div>
+                    <div class="card-body p-5">
+                        @if(empty($members_labels) || count($members_labels) === 0)
+                            <div class="text-center text-gray-400 py-5">
+                                <i class="fas fa-users fa-4x mb-3 opacity-50"></i>
+                                <p>Aucune activité enregistrée.</p>
+                            </div>
+                        @else
+                            <div class="space-y-6">
+                                @php $colors = ['from-purple-600 to-pink-600', 'from-emerald-600 to-teal-500', 'from-orange-500 to-red-600', 'from-indigo-600 to-blue-500']; @endphp
+                                @php $maxValue = max($members_values) ?: 1; @endphp
+                                @foreach($members_labels as $index => $name)
+                                    @php
+                                        $value = $members_values[$index] ?? 0;
+                                        $percent = ($value / $maxValue) * 100;
+                                        $colorClass = $colors[$index % count($colors)];
+                                    @endphp
+                                    <div class="flex items-center gap-4">
+                                        <span class="w-32 text-left font-medium truncate">{{ $name }}</span>
+                                        <div class="flex-1 relative">
+                                            <div class="h-14 bg-gray-700 rounded-full overflow-hidden shadow-inner">
+                                                <div class="h-full bg-gradient-to-r {{ $colorClass }} rounded-full flex items-center justify-end px-4 transition-all duration-1000 ease-out shadow-lg"
+                                                     style="width: {{ $percent }}%;">
+                                                    <span class="text-lg font-bold drop-shadow">{{ $value }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr class="border-gray-600 my-5">
+
+
+
+----------------------
+
+
+
+@push('styles')
+<style>
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .space-y-5 > * + * { margin-top: 1.25rem; }
+    .transition-all { transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+    .drop-shadow { filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.8)); }
+    /* Utilitaires Tailwind-like pour Blade */
+    .relative { position: relative; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .items-end { align-items: flex-end; }
+    .justify-around { justify-content: space-around; }
+    .justify-end { justify-content: flex-end; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .space-y-6 > * + * { margin-top: 1.5rem; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .drop-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
+    .drop-shadow-lg { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); }
+    .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.6); }
+    .origin-bottom { transform-origin: bottom; }
+    .max-w-20 { max-width: 5rem; }
+    .w-32 { width: 8rem; }
+    .h-96 { height: 24rem; }
+    .h-14 { height: 3.5rem; }
+    .text-left { text-align: left; }
+</style>
+@endpush
+
+
+--------------------------code fonctionne bien ------------------------
+
+<hr class="border-gray-600 my-5">
+        <h5>Barre avec Bootstrap uniquement</h5>
+         <!-- Graphiques avec Bootstrap 5 uniquement (progress bar) -->
+        <div class="row g-4 mb-5">
+
+            <!-- Tâches complétées par jour -->
+            <div class="col-lg-6">
+                <div class="card leader-card">
+                    <div class="card-header leader-header">
+                        Tâches complétées par jour (7 derniers jours)
+                    </div>
+
+                    <div class="card-body leader-body">
+
+                        @if(empty($completedTasks_labels))
+                            <p class="text-center text-muted py-5">Aucune donnée disponible</p>
+                        @else
+                            @php $maxTasks = max($completedTasks_values); @endphp
+
+                            @foreach($completedTasks_labels as $i => $day)
+                                @php
+                                    $value = $completedTasks_values[$i];
+                                    $percent = ($value / $maxTasks) * 100;
+                                @endphp
+
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted fw-semibold">{{ $day }}</span>
+                                        <span class="fw-bold">{{ $value }}</span>
+                                    </div>
+
+                                    <div class="progress leader-progress">
+                                        <div class="progress-bar leader-bar"
+                                            style="width: {{ $percent }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Membres les plus actifs -->
+            <div class="col-lg-6">
+                <div class="card leader-card">
+                    <div class="card-header leader-header">
+                        Membres les plus actifs
+                    </div>
+
+                    <div class="card-body leader-body">
+
+                        @if(empty($members_labels))
+                            <p class="text-center text-muted py-5">Aucune activité enregistrée</p>
+                        @else
+                            @php $maxMember = max($members_values); @endphp
+
+                            @foreach($members_labels as $i => $name)
+                                @php
+                                    $value = $members_values[$i];
+                                    $percent = ($value / $maxMember) * 100;
+                                @endphp
+
+                                <div class="mb-5">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="fw-bold">{{ $name }}</span>
+                                        <span class="text-muted">{{ $value }} tâches</span>
+                                    </div>
+
+                                    <div class="progress leader-progress-lg">
+                                        <div class="progress-bar leader-bar"
+                                            style="width: {{ $percent }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+
+@push('styles')
+<style>
+
+/* Carte */
+.leader-card {
+    background: #0f172a;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0,0,0,.5);
+    color: #e5e7eb;
+}
+
+/* Header */
+.leader-header {
+    background: linear-gradient(180deg, #111827, #0f172a);
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #1f2933;
+}
+
+/* Body */
+.leader-body {
+    padding: 2rem;
+}
+
+/* Progress container */
+.leader-progress,
+.leader-progress-lg {
+    background: #1f2937;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.6);
+}
+
+.leader-progress {
+    height: 18px;
+}
+
+.leader-progress-lg {
+    height: 26px;
+}
+
+/* Barre ACTIVE (bien visible) */
+.leader-bar {
+    background: linear-gradient(
+        90deg,
+        #2dd4bf,
+        #22d3ee,
+        #38bdf8
+    );
+    box-shadow:
+        0 0 15px rgba(45,212,191,.8),
+        inset 0 0 4px rgba(255,255,255,.4);
+    transition: width 1.6s ease;
+}
+
+/* Texte */
+.text-muted {
+    color: #9ca3af !important;
+}
+
+</style>
+@endpush

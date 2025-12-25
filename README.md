@@ -109,6 +109,8 @@ composer require spatie/laravel-permission
 
 👉 Tu en as besoin pour les deadlines. &&  Tu peux l’utiliser en JS pur
 
+⭐ composer require doctrine/dbal
+- Using version ^4.4 for doctrine/dbal
 
 ---------------------------------
 

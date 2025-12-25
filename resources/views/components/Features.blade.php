@@ -1,4 +1,7 @@
- <!-- Hero Section -->
+@extends('winHome')
+
+@section('contentH')
+    <!-- Hero Section -->
     <section class="hero-section">
         <div class="container">
             <h1 class="hero-title mb-4">Teaminks</h1>
@@ -80,3 +83,4 @@
             </div>
         </div>
     </section>
+@endsection

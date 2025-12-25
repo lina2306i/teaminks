@@ -1,0 +1,207 @@
+@extends('layouts.appW')
+
+@section('contentW')
+
+<section id="register" class="py-5">
+    <div class="container">
+        <div class="row  g-5 justify-content-center">
+            <div class="col-md-8">
+                <div class="card feature-card text-white h-250">
+
+                    <div class="card-header d-flex align-items-center">{{ __('Register') }}</div>
+
+                    <div class="card-body w-full h-full my-3 p-4">
+                        <form method="POST" action="{{ route('register') }}">
+                            @csrf
+
+                            <div class="row mb-3 cw-full my-3">
+                                <label for="name" class="col-md-4 text-xl col-form-label text-md-end">{{ __('Name') }}</label>
+
+                                <div class="col-md-6">
+                                    <input id="name" type="text" class="form-control mt-2.5 block w-full   @error('name') is-invalid @enderror" name="name" value="{{ old('name') }}" placeholder="Your Name" required autocomplete="name" autofocus>
+
+                                    {{--
+                                    <input id="name" type="text" class="form-control  @error('name') is-invalid @enderror" name="name" value="{{ old('name') }}" placeholder="Your Name" required autocomplete="name" autofocus>
+                                    @error('name')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                    <x-input-error :messages="$errors->get('name')" />
+                                    --}}
+                                    <InputError :messages="formErrors.name" />
+
+
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
+
+                                <div class="col-md-6">
+                                    <input id="email" type="email" placeholder="Email@example.com" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email">
+
+                                    {{--
+                                    @error('email')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                    <x-input-error :messages="$errors->get('email')" />
+                                    --}}
+                                    <InputError :messages="formErrors.email" />
+
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <span class="col-md-4">
+                                    <div class="mb-3">
+                                    <label for="name" class="text-xl">Position </label>
+                                    <InputError :messages="formErrors.position" />
+                                    <input
+                                        v-model="form.position"
+                                        id="position"
+                                        name="position"
+                                        type="text"
+                                        required
+                                        placeholder="Your Technical Poistion"
+                                        class="mt-2.5 block w-full bg-gray-600 rounded-lg border-0 py-3 pl-5 text-xl max-sm:py-2 text-white ring-1 ring-gray-200 ring-inset placeholder:text-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-inset sm:text-sm" />
+                                    </div>
+
+                                    <div class="my-3">
+                                    <label for="date" class="text-xl">Brithdate</label>
+                                    <InputError :messages="formErrors.birthdate" />
+                                    <input
+                                        v-model="form.birthdate"
+                                        id="date"
+                                        name="date"
+                                        type="date"
+                                        required
+                                        class="mt-2.5 block w-full  rounded-lg border-0 py-3 pl-5 text-xl max-sm:py-2 " />
+                                    </div>
+
+                                </span>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
+
+                                <div class="col-md-6">
+                                    <input id="password" placeholder="At Least 6 characters" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password">
+
+                                    {{--
+                                    <x-input-error :messages="$errors->get('password')" />
+                                    @error('password')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                    --}}
+                                    <InputError :messages="formErrors.password" />
+
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="password-confirm" class="col-md-4 col-form-label text-md-end">{{ __('Confirm Password') }}</label>
+
+                                <div class="col-md-6">
+                                    <input id="password-confirm" placeholder="Password Confirmation" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="role" class="col-md-4 col-form-label text-md-end">{{ __('Role') }}</label>
+
+                                <!-- added role selection or mybe well be added by admin who choose them role will be -->
+                                <div class="col-md-6">
+                                    <select name="role" id="role"class="form-select @error('role') is-invalid @enderror" required>
+                                        <option disabled selected>What Am I?</option>
+                                        <option value="">-- Choose role --</option>
+                                        <option value="leader" {{ old('role') == 'leader' ? 'selected' : '' }}>Leader</option>
+                                        <option value="member" {{ old(key: 'role') == 'member' ? 'selected' : '' }}>Member</option>
+
+                                    </select>
+
+                                    {{--
+                                    @error('role')
+                                        <span class="invalid-feedback">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                    --}}
+                                    <InputError :messages="formErrors.role" />
+                                </div>
+                            </div>
+
+                            <div class="row mb-0">
+                                <div class="col-md-6 offset-md-4">
+                                    <button :disabled="isLoading" :class="[isLoading ? 'cursor-no-drop' : 'cursor-pointer']"
+                                         type="submit" class="btn btn-primary btn btn-lg btn-contact text-white">
+                                        {{ __('Register') }}<Loader v-if="isLoading" class="ml-2 animate-spin"/>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@endsection
+
+
+{{-- Styles personnalisés pour matcher ton design Vue --}}
+@push('styles')
+<style>
+    .text-xl { font-size: 1.25rem; }
+    .bg-gradient-primary {
+        background: linear-gradient(to right, #2563eb, #7c3aed);
+    }
+    .text-danger { color: #ef4444 !important; }
+</style>
+@endpush
+--------------
+
+@push('styles')
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(to right, #2563eb, #7c3aed);
+    }
+
+    .form-control, .form-select {
+        background-color: #1e293b;
+        border: 1px solid #374151;
+        color: #e2e8f0;
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #1e293b;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        color: #e2e8f0;
+    }
+
+    .invalid-feedback {
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    .btn-contact {
+        background: linear-gradient(to right, #9333ea, #ec4899);
+    }
+
+    .btn-contact:hover {
+        background: linear-gradient(to right, #7c3aed, #db2777);
+    }
+
+    .hover\:underline:hover {
+        text-decoration: underline;
+    }
+</style>
+@endpush

@@ -1,0 +1,187 @@
+@extends('layouts.appW')
+
+@section('contentW')
+<section class="py-5 min-vh-100">
+    <div class="container">
+        <div class="max-w-4xl mx-auto">
+            <!-- Bouton Retour -->
+            <div class="mb-4">
+                <a href="{{ route('leader.posts.index') }}" class="btn btn-outline-light">
+                    ← Back to posts
+                </a>
+            </div>
+
+            <!-- Carte du Post -->
+            <div class="card bg-gray-900 border border-gray-700 rounded-xl shadow-2xl text-white">
+                <div class="card-body p-6">
+                    <!-- En-tête : Auteur + Date -->
+                    <div class="flex items-center gap-4 mb-5">
+                        <img src="{{ $post->user->profile ?? asset('images/default-avatar.png') }}"
+                             alt="Profile"
+                             class="w-16 h-16 rounded-full border-4 border-blue-500 object-cover">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-user text-blue-400"></i>
+                                <h5 class="fw-bold mb-0">{{ $post->user->name }}</h5>
+                            </div>
+                            <small class="text-gray-400 d-flex align-items-center gap-1 mt-1">
+                                <i class="fas fa-calendar-alt"></i>
+                                {{ $post->created_at->diffForHumans() }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Titre et Contenu -->
+                    <h1 class="text-3xl fw-bold mb-3">{{ $post->title ?? 'Untitled Post' }}</h1>
+                    <p class="text-gray-200 text-lg mb-5 leading-relaxed">{{ $post->content }}</p>
+
+                    <!-- Image du post (si présente) -->
+                    @if($post->image)
+                        <div class="mb-5">
+                            <img src="{{ asset('storage/' . $post->image) }}"
+                                 class="img-fluid rounded-lg shadow-lg w-100"
+                                 alt="Image du post">
+                        </div>
+                    @endif
+
+                    <!-- Actions : Likes + Commentaires -->
+                    <div class="flex items-center gap-6 mb-5 pb-4 border-bottom border-gray-700">
+                        <!-- Like (seulement pour les members) -->
+                        @if(auth()->user()->role === 'member')
+                            <form action="{{ route('leader.posts.like.toggle', $post) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit"
+                                        class="btn {{ $isLiked ? 'btn-primary' : 'btn-outline-primary' }} d-flex align-items-center gap-2">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span>{{ $post->likes_count }} Like{{ $post->likes_count != 1 ? 's' : '' }} </span>
+                                </button>
+                            </form>
+                        @else
+                            <span class="d-flex align-items-center gap-2 text-primary">
+                                <i class="fas fa-thumbs-up"></i>
+                                {{ $post->likes_count }} Like{{ $post->likes_count > 1 ? 's' : '' }}
+                            </span>
+                        @endif
+
+                        <!-- Commentaires -->
+                        <span class="d-flex align-items-center gap-2 text-emerald-400">
+                            <i class="fas fa-comment"></i>
+                            {{ $post->comments_count }} Commentaire{{ $post->comments_count > 1 ? 's' : '' }}
+                        </span>
+
+                        <!-- Voir les likes -->
+                        <button class="btn btn-link text-blue-400 p-0" data-bs-toggle="modal" data-bs-target="#likesModal">
+                            Voir les likes
+                        </button>
+                    </div>
+
+                    <!-- Formulaire d'ajout de commentaire (seulement pour members) -->
+                    @if(auth()->user()->role === 'member')
+                        <div class="mb-5">
+                            <form action="{{ route('leader.posts.comment.store', $post) }}" method="POST">
+                                @csrf
+                                <div class="d-flex gap-3">
+                                    <div class="flex-grow-1">
+                                        <textarea name="content"
+                                                  class="form-control bg-gray-800 border-gray-600 text-white"
+                                                  rows="3"
+                                                  placeholder="Add a comment...."
+                                                  required>{{ old('content') }}</textarea>
+                                        @error('content')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <button type="submit"
+                                                class="btn btn-primary rounded-circle p-3 d-flex align-items-center justify-content-center"
+                                                style="width: 50px; height: 50px;">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    @endif
+
+                    <!-- Liste des commentaires -->
+                    <h3 class="h5 fw-bold mb-4">Comments</h3>
+                    @if($post->comments->count() > 0)
+                        <div class="space-y-4">
+                            @foreach($post->comments as $comment)
+                                <div class="d-flex gap-3 bg-gray-800 rounded-lg p-4">
+                                    <img src="{{ $comment->user->profile ?? asset('images/default-avatar.png') }}"
+                                         alt="Profile"
+                                         class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                                    <div class="flex-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong class="text-white">{{ $comment->user->name }}</strong>
+                                                <small class="text-gray-400 ms-2">
+                                                    {{ $comment->created_at->diffForHumans() }}
+                                                </small>
+                                            </div>
+                                            <!-- Suppression si c'est le commentaire de l'utilisateur connecté -->
+                                            @if(auth()->id() === $comment->user_id)
+                                                <form action="{{ route('post.comment.destroy', $comment) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-danger p-1 rounded"
+                                                            onclick="return confirm('Supprimer ce commentaire ?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                        <p class="text-gray-200 mt-2 mb-0">{{ $comment->content }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-gray-500 text-center py-4">No comments yet.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal des Likes -->
+<div class="modal fade" id="likesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-gray-900 text-white border-gray-700">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title">People who liked this</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                @if($post->likes->count() > 0)
+                    <div class="space-y-3">
+                        @foreach($post->likes as $like)
+                            <div class="d-flex align-items-center gap-3 bg-gray-800 rounded p-3">
+                                <img src="{{ $like->user->profile ?? asset('images/default-avatar.png') }}"
+                                     alt="Profile"
+                                     class="w-10 h-10 rounded-full object-cover">
+                                <div>
+                                    <strong>{{ $like->user->name }}</strong>
+                                    <small class="text-gray-400 d-block">
+                                        {{ $like->created_at->diffForHumans() }}
+                                    </small>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-gray-500 text-center">Personne n'a aimé ce post pour le moment.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('styles')
+    <!-- Posts CSS -->
+    <link rel="stylesheet" href="{{ asset('css/stylePosts.css') }}">
+@endpush

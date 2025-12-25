@@ -1,0 +1,150 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\UsersController;
+use App\Http\Controllers\Leader\LeaderController;
+use App\Http\Controllers\Leader\LeaderProjectController;
+use App\Http\Controllers\Leader\LeaderTaskController;
+use App\Http\Controllers\Leader\LeaderPostController;
+use App\Http\Controllers\Leader\LeaderTeamController;
+use App\Http\Controllers\AdminController;
+
+// ===================================================================
+// 1. ROUTES PUBLIQUES (accessibles sans connexion)
+// ===================================================================
+
+Route::get('/', function () {
+    return view('welcome'); // ou 'home' selon ton choix
+})->name('welcome');
+
+Route::get('/win', function () {
+    return view('windoHome');
+})->name('home');
+
+// ===================================================================
+// 2. AUTHENTIFICATION (Login / Register / Logout)
+// ===================================================================
+
+// Affichage des formulaires
+Route::get('/login', [UsersController::class, 'showLoginForm'])->name('login.form');
+Route::get('/register', [UsersController::class, 'showRegisterForm'])->name('register.form');
+
+// Actions
+Route::post('/login', [UsersController::class, 'login'])->name('login');
+Route::post('/register', [UsersController::class, 'register'])->name('register');
+Route::post('/logout', [UsersController::class, 'logout'])->name('logout');
+
+// ===================================================================
+// 3. MODE TEST : Accès direct aux pages pour tester l'interface
+//     → Décommente ce bloc quand tu veux tester les vues sans login
+// ===================================================================
+
+/*
+Route::get('/leader/dashboard', fn() => view('leader.dashboard'));
+Route::get('/leader/projects', fn() => view('leader.projects.index'));
+Route::get('/leader/projects/create', fn() => view('leader.projects.create'));
+Route::get('/leader/tasks', fn() => view('leader.tasks.index'));
+Route::get('/leader/posts', fn() => view('leader.posts.index'));
+Route::get('/leader/team', fn() => view('leader.team'));
+Route::get('/leader/notifications', fn() => view('leader.notifications'));
+Route::get('/leader/notes', fn() => view('leader.notes'));
+Route::get('/leader/profile', fn() => view('leader.profile'));
+// Ajoute ici d'autres vues Member ou Admin pour test rapide
+*/
+
+
+Route::get('profile', [LeaderController::class, 'profile'])->name('profile');
+
+// ===================================================================
+// 4. ROUTES PROTÉGÉES PAR RÔLE (mode production)
+// ===================================================================
+
+Route::middleware(['auth'])->group(function () {
+
+    // Redirection automatique après login selon le rôle
+    // (tu peux aussi le mettre dans UsersController@login si tu préfères)
+    Route::get('/redirect', function () {
+        $user = auth()->user();
+
+        if ($user->role === 'leader') {
+            return redirect()->route('leader.dashboard');
+        }
+
+        if ($user->role === 'member') {
+            return redirect()->route('member.dashboard'); // à créer plus tard
+        }
+
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('welcome');
+    })->name('redirect.after.login');
+
+    // ==================== LEADER ====================
+    Route::middleware('role:leader')
+        ->prefix('leader')
+        ->name('leader.')
+        ->group(function () {
+
+            Route::get('/dashboard', [LeaderController::class, 'dashboard'])->name('dashboard');
+
+            // Projets
+            Route::resource('projects', LeaderProjectController::class);
+            // show est inclus dans resource, mais si tu veux un nom explicite :
+            // Route::get('projects/{project}', [LeaderProjectController::class, 'show'])->name('projects.show');
+
+            // Tâches
+            Route::resource('tasks', LeaderTaskController::class);
+
+            // Posts
+            Route::get('posts', [LeaderPostController::class, 'index'])->name('posts.index');
+            Route::get('posts/create', [LeaderPostController::class, 'create'])->name('posts.create');
+            Route::post('posts', [LeaderPostController::class, 'store'])->name('posts.store');
+            Route::delete('posts/{post}', [LeaderPostController::class, 'destroy'])->name('posts.destroy');
+
+            // Équipe
+            Route::get('team', [LeaderTeamController::class, 'index'])->name('team.index');
+            Route::post('team/accept/{user}', [LeaderTeamController::class, 'accept'])->name('team.accept');
+            Route::delete('team/reject/{user}', [LeaderTeamController::class, 'reject'])->name('team.reject');
+            Route::delete('team/remove/{pivot}', [LeaderTeamController::class, 'remove'])->name('team.remove');
+
+            // Autres pages Leader
+            Route::get('notifications', [LeaderController::class, 'notifications'])->name('notifications');
+            Route::get('notes', [LeaderController::class, 'notes'])->name('notes');
+            Route::get('profile', [LeaderController::class, 'profile'])->name('profile');
+
+        });
+
+    // ==================== MEMBER (à créer plus tard) ====================
+    Route::middleware('role:member')
+        ->prefix('member')
+        ->name('member.')
+        ->group(function () {
+            Route::get('/dashboard', fn() => view('member.dashboard'))->name('dashboard');
+            Route::get('/my-teams', fn() => view('member.teams.my'))->name('my.teams');
+            // Ajoute ici les routes member plus tard
+        });
+
+    // ==================== ADMIN ====================
+    Route::middleware('role:admin')
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('/users', [AdminController::class, 'index'])->name('users');
+            // Autres routes admin...
+        });
+});
+
+// ===================================================================
+// 5. Redirection après login (appelé automatiquement par Laravel)
+// ===================================================================
+
+// Dans ton UsersController@login, après Auth::login($user);
+// Ajoute ceci :
+/*
+return redirect()->route('redirect.after.login');
+*/
+
+// OU plus simple : modifie la méthode authenticated dans UsersController
+// (si tu as un LoginController personnalisé)

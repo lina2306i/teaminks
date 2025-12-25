@@ -1,3 +1,4 @@
+<?php
 return [
     'Login' => 'Login',
     'Remember Me' => 'Remember Me',

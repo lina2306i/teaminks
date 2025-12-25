@@ -1,0 +1,90 @@
+/* public/css/posts.css */
+
+/* Fonds sombres */
+.bg-gray-950 { background-color: #0f172a; }
+.bg-gray-900 { background-color: #111827; }
+.bg-gray-800 { background-color: #1e293b; }
+.bg-gray-700 { background-color: #334155; }
+
+/* Cartes */
+.card {
+    /*background-color: #1e293b !important;*/
+    background-color: #382641 !important;
+    border: 1px solid #374151 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Formulaires */
+.form-control,
+.form-select {
+    background-color: #3b2b44 !important;
+    border: 1px solid #4b5563 !important;
+    color: #e2e8f0 !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: #334155 !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25) !important;
+    color: #e2e8f0 !important;
+}
+
+.form-control::placeholder {
+    color: #9ca3af !important;
+}
+
+/* Labels */
+.form-label {
+    color: #e2e8f0 !important;
+    font-weight: 600;
+}
+
+/* Boutons */
+.btn-primary,
+.btn-info {
+    background: linear-gradient(to right, #3b82f6, #8b5cf6) !important;
+    border: none !important;
+}
+
+.btn-primary:hover,
+.btn-info:hover {
+    background: linear-gradient(to right, #2563eb, #7c3aed) !important;
+}
+
+.btn-warning {
+    background: linear-gradient(to right, #f59e0b, #f97316) !important;
+    border: none !important;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(to right, #d97706, #ea580c) !important;
+}
+
+/* Hover carte */
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+    border-color: #60a5fa !important;
+    transition: all 0.3s ease;
+}
+
+
+
+
+/* Alertes et autres */
+.alert-info {
+    background-color: #eed7af !important;
+    border-color: #f6833b !important;
+    color: #000000 !important;
+}
+
+.alert-warning {
+    background-color: #7c2d12 !important;
+    border-color: #f97316 !important;
+    color: #fed7aa !important;
+}
+
+.rounded-xl { border-radius: 1rem; }
+.rounded-lg { border-radius: 0.75rem; }
+.transition-all { transition: all 0.3s ease; }

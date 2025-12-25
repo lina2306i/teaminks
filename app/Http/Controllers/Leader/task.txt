@@ -1,0 +1,368 @@
+
+
+v0.1  add subtasks manager
+<?php
+
+namespace App\Http\Controllers\Leader;
+
+use App\Http\Controllers\Controller;
+use App\Models\Task;
+use App\Models\Project;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class LeaderTaskController extends Controller
+{
+    /**
+     * Display a listing of all tasks from the leader's projects.
+     */
+    public function index(Request $request)
+    {
+        /*$tasks = Auth::user()
+            ->projects()
+            ->with('tasks.assignedTo')
+            ->get()
+            ->pluck('tasks')
+            ->flatten()
+            ->sortByDesc('created_at');*/
+        //update avec vue ::
+
+        $projectId = $request->query('projectId');
+        $status = $request->query('status');
+        // Récupère tous les projets du leader pour le filtre
+        $projects = Auth::user()->projects()->get();
+
+        // Requête de base sur les tâches
+        $tasksQuery = Task::query()
+            ->with('project', 'assignedTo')
+            ->whereHas('project', function ($query) {
+                $query->where('leader_id', Auth::id());
+            });
+
+        // Filtre par projet si demandé
+        if ($projectId) {
+            $tasksQuery->where('project_id', $projectId);
+        }
+        if ($status && in_array($status, ['todo', 'in_progress', 'completed'])) {
+            $tasksQuery->where('status', $status);
+        }
+
+        // Tri + pagination directement sur la query
+        $tasks = $tasksQuery
+            ->latest()
+            ->paginate(10)
+            ->appends(['projectId' => $projectId]); // garde le filtre dans les liens de pagination
+
+        $hasProjects = $projects->count() > 0;
+        $hasTasks = $tasks->count() > 0;
+
+        return view('leader.tasks.index', compact(
+            'tasks',
+            'projects',
+            'hasProjects',
+            'hasTasks'
+        ));
+
+       // return view('leader.tasks.index', compact('tasks'));
+    }
+
+    /**
+     * Show the form for creating a new task.
+     */
+    public function create()
+    {
+        //$projects = Auth::user()->projects()->with('team.members')->get();
+        $projects = Auth::user()->projects;
+        $teamMembers = Auth::user()
+            ->teamsAsLeader
+            ->pluck('members')
+            ->flatten()
+            ->unique('id');
+
+        return view('leader.tasks.create', compact('projects', 'teamMembers'));
+    }
+
+    /**
+     * Store a newly created task in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'subtasks' => 'nullable|array',
+            'subtasks.*' => 'string|max:255',
+            'start_at' => 'nullable|date',
+            'due_date' => 'nullable|date|after:start_at',
+            'assigned_to' => 'nullable|exists:users,id',
+            'difficulty' => 'required|in:easy,medium,hard',
+            'points' => 'required|integer|min:1',
+        ]);
+
+        $project = Project::where('leader_id', Auth::id())->findOrFail($validated['project_id']);
+
+        // Tu peux sauvegarder les subtasks séparément ou en JSON selon ton modèle
+        $project->tasks()->create($validated);
+
+        return redirect()->route('leader.tasks.index')
+            ->with('success', 'Task created successfully!');
+    }
+
+    /**
+     * Display the specified task.
+     */
+    public function show(Task $task)
+    {
+        $this->authorizeTask($task);
+        $task->load(['project', 'assignedTo']);
+
+        return view('leader.tasks.show', compact('task'));
+    }
+
+    /**
+     * Show the form for editing the specified task.
+     */
+    public function edit(Task $task)
+    {
+        $this->authorizeTask($task);
+
+        $projects = Auth::user()->projects;
+        $teamMembers = Auth::user()->teamsAsLeader->pluck('members')->flatten()->unique('id');
+
+        $task->load('subtasks');
+
+        return view('leader.tasks.edit', compact('task', 'projects', 'teamMembers'));
+    }
+
+    /**
+     * Update the specified task in storage.
+     */
+    public function update(Request $request, Task $task)
+    {
+        $this->authorizeTask($task);
+
+        $validated = $request->validate([
+            'project_id'  => 'required|exists:projects,id',
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
+            'status'      => 'required|in:todo,in_progress,completed',
+            'due_date'    => 'nullable|date',
+        ]);
+
+        // Vérifie que le nouveau projet (si changé) appartient au leader
+        if ($validated['project_id'] != $task->project_id) {
+            Project::where('leader_id', Auth::id())->findOrFail($validated['project_id']);
+        }
+
+        $task->update($validated);
+
+        return redirect()->route('leader.tasks.index')
+            ->with('success', 'Task updated successfully!');
+    }
+
+    /**
+     * Remove the specified task from storage.
+     */
+    public function destroy(Task $task)
+    {
+        $this->authorizeTask($task);
+
+        $task->delete();
+
+        return redirect()->route('leader.tasks.index')
+            ->with('success', 'Task deleted successfully.');
+    }
+
+    /**
+     * Check if the task belongs to one of the authenticated leader's projects.
+     */
+    private function authorizeTask(Task $task): void
+    {
+        if ($task->project->leader_id !== Auth::id()) {
+            abort(403, 'Unauthorized access.');
+        }
+    }
+}
+
+
+
+v0.0
+<?php
+
+namespace App\Http\Controllers\Leader;
+
+use App\Http\Controllers\Controller;
+use App\Models\Task;
+use App\Models\Project;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class LeaderTaskController extends Controller
+{
+    /**
+     * Display a listing of all tasks from the leader's projects.
+     */
+    public function index(Request $request)
+    {
+        /*$tasks = Auth::user()
+            ->projects()
+            ->with('tasks.assignedTo')
+            ->get()
+            ->pluck('tasks')
+            ->flatten()
+            ->sortByDesc('created_at');*/
+        //update avec vue ::
+
+        $projectId = $request->query('projectId');
+        $status = $request->query('status');
+        // Récupère tous les projets du leader pour le filtre
+        $projects = Auth::user()->projects()->get();
+
+        // Requête de base sur les tâches
+        $tasksQuery = Task::query()
+            ->with('project', 'assignedTo')
+            ->whereHas('project', function ($query) {
+                $query->where('leader_id', Auth::id());
+            });
+
+        // Filtre par projet si demandé
+        if ($projectId) {
+            $tasksQuery->where('project_id', $projectId);
+        }
+        if ($status && in_array($status, ['todo', 'in_progress', 'completed'])) {
+            $tasksQuery->where('status', $status);
+        }
+
+        // Tri + pagination directement sur la query
+        $tasks = $tasksQuery
+            ->latest()
+            ->paginate(10)
+            ->appends(['projectId' => $projectId]); // garde le filtre dans les liens de pagination
+
+        $hasProjects = $projects->count() > 0;
+        $hasTasks = $tasks->count() > 0;
+
+        return view('leader.tasks.index', compact(
+            'tasks',
+            'projects',
+            'hasProjects',
+            'hasTasks'
+        ));
+
+       // return view('leader.tasks.index', compact('tasks'));
+    }
+
+    /**
+     * Show the form for creating a new task.
+     */
+    public function create()
+    {
+        //$projects = Auth::user()->projects()->with('team.members')->get();
+        $projects = Auth::user()->projects;
+        $teamMembers = Auth::user()
+            ->teamsAsLeader
+            ->pluck('members')
+            ->flatten()
+            ->unique('id');
+
+        return view('leader.tasks.create', compact('projects', 'teamMembers'));
+    }
+
+    /**
+     * Store a newly created task in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'project_id'  => 'required|exists:projects,id',
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
+            'status'      => 'required|in:todo,in_progress,completed',
+            'due_date'    => 'nullable|date',
+        ]);
+
+        $project = Project::where('leader_id', Auth::id())->findOrFail($validated['project_id']);
+
+        $project->tasks()->create($validated);
+
+        return redirect()->route('leader.tasks.index')
+            ->with('success', 'Task created successfully!');
+    }
+
+    /**
+     * Display the specified task.
+     */
+    public function show(Task $task)
+    {
+        $this->authorizeTask($task);
+        $task->load(['project', 'assignedTo']);
+
+        return view('leader.tasks.show', compact('task'));
+    }
+
+    /**
+     * Show the form for editing the specified task.
+     */
+    public function edit(Task $task)
+    {
+        $this->authorizeTask($task);
+
+        $projects = Auth::user()->projects;
+        $teamMembers = Auth::user()->teamsAsLeader->pluck('members')->flatten()->unique('id');
+
+        return view('leader.tasks.edit', compact('task', 'projects', 'teamMembers'));
+    }
+
+    /**
+     * Update the specified task in storage.
+     */
+    public function update(Request $request, Task $task)
+    {
+        $this->authorizeTask($task);
+
+        $validated = $request->validate([
+            'project_id'  => 'required|exists:projects,id',
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
+            'status'      => 'required|in:todo,in_progress,completed',
+            'due_date'    => 'nullable|date',
+        ]);
+
+        // Vérifie que le nouveau projet (si changé) appartient au leader
+        if ($validated['project_id'] != $task->project_id) {
+            Project::where('leader_id', Auth::id())->findOrFail($validated['project_id']);
+        }
+
+        $task->update($validated);
+
+        return redirect()->route('leader.tasks.index')
+            ->with('success', 'Task updated successfully!');
+    }
+
+    /**
+     * Remove the specified task from storage.
+     */
+    public function destroy(Task $task)
+    {
+        $this->authorizeTask($task);
+
+        $task->delete();
+
+        return redirect()->route('leader.tasks.index')
+            ->with('success', 'Task deleted successfully.');
+    }
+
+    /**
+     * Check if the task belongs to one of the authenticated leader's projects.
+     */
+    private function authorizeTask(Task $task): void
+    {
+        if ($task->project->leader_id !== Auth::id()) {
+            abort(403, 'Unauthorized access.');
+        }
+    }
+}

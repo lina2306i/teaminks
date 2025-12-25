@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('windoHome')
 
-@section('content')
+@section('contentH')
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">

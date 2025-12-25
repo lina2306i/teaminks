@@ -21,7 +21,9 @@ return new class extends Migration
                   ->constrained('users')
                   ->cascadeOnDelete();
 
+            //$table->string(column: 'invite_code')->unique();  //ex : AB3D-9F2G ou TEAM1234.
             $table->timestamps();
+
        });
     }
 

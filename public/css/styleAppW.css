@@ -75,3 +75,14 @@
             50% { transform: translateY(-10px); }
 
         }
+
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            border-left-color: #3b82f6 !important;
+        }

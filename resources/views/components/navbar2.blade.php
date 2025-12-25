@@ -57,15 +57,42 @@
 
                         <div class="dropdown-menu dropdown-menu-end bg-gray-800 border-gray-700" aria-labelledby="navbarDropdown">
                             <!-- Tu peux ajouter d'autres liens ici (profil, dashboard, etc.) -->
-                            <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2" href="{{ route('profile') }}">
+                            <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2" href="{{ route('leader.profile') }}">
                                 Profil
                             </a>
-                            <div class="dropdown-divider bg-gray-600"></div>
-                            <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2"
-                               href="{{ route('logout') }}"
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                Logout
+                            <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2" href="{{ route('leader.dashboard') }}">
+                                Dashboard |{{ Auth::user()->role }}
                             </a>
+                            <!--a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                    { { Auth::user()->name }}
+                            </!--a-->
+                            <div class="dropdown-divider bg-gray-600">
+                                 <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2"
+                                href="{{ route('logout') }}"
+                                onclick="event.preventDefault();
+                                                document.getElementById('logout-form').submit();">
+                                    {{ __('Logout') }}
+                                </a>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                                </form>
+                            </div>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+
+                                <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2"
+                                href="{{ route('logout') }}"
+                                onclick="event.preventDefault();
+                                                document.getElementById('logout-form').submit();">
+                                    {{ __('Logout') }}
+                                </a>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                                </form>
+                            </div>
+
+
+
+
                         </div>
                     </li>
                 @endguest

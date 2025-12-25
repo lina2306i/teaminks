@@ -1,0 +1,112 @@
+@extends('layouts.appW')
+
+@section('contentW')
+
+<section id="login" class="py-5">
+    <div class="container">
+        <div class="row g-5 justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card feature-card text-white h-100">
+                    <div class="card-header d-flex align-items-center ">{{ __('Login') }}</div>
+
+                    <div class="card-body p-4">
+                        <form method="POST" action="{{ route('login') }}">
+                            @csrf
+
+                            <div class="row mb-3">
+                                <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
+
+                                <div class="col-md-6">
+                                    <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+
+                                    @error('email')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
+
+                                <div class="col-md-6">
+                                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+
+                                    @error('password')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                            </div>
+
+div class="mb-4">
+                                <label for="password" class="form-label text-xl text-white fw-medium">Password</label>
+
+                                <input
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    required
+                                    autocomplete="current-password"
+                                    placeholder="••••••••"
+                                    class="form-control form-control-lg bg-gray-600 border-0 text-white placeholder-gray-400
+                                           py-3 px-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+
+                                <x-input-error :messages="$errors->get('password')" />
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6 offset-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+
+                                        <label class="form-check-label" for="remember">
+                                            {{ __('Remember Me') }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-0">
+                                <div class="col-md-8 offset-md-4">
+                                    <button type="submit" class="btn btn-primary  btn-lg btn-contact text-white">
+                                        {{ __('Login') }}
+                                    </button>
+
+                                    @if (Route::has('password.request'))
+                                        <a class="btn btn-link" href="{{ route('password.request') }}">
+                                            {{ __('Forgot Your Password?') }}
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@endsection
+
+
+
+{{-- Styles personnalisés pour matcher ton design Vue --}}
+@push('styles')
+<style>
+    .bg-gray-900 { background-color: #111827; }
+    .bg-gray-600 { background-color: #374151; }
+    .bg-blue-600 { background-color: #2563eb; }
+    .bg-blue-700 { background-color: #1d4ed8; }
+    .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
+    .placeholder-gray-400::placeholder { color: #9ca3af; }
+    .text-xl { font-size: 1.25rem; }
+    .bg-gradient-primary {
+        background: linear-gradient(to right, #2563eb, #7c3aed);
+    }
+    .text-danger { color: #ef4444 !important; }
+</style>
+@endpush

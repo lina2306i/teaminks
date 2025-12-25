@@ -29,13 +29,24 @@ class DatabaseSeeder extends Seeder
             'email' => 'leader@test.com',
             'password' => Hash::make('pwd123'),
             'role' => 'leader',
-            ]);
+        ]);
 
         User::factory()->create([
             'name' => 'Lina Admin',
             'email' => 'lina.hkl2306@gmail.com',
             'password' => Hash::make('pwd123'),
             'role' => 'admin',
-            ]);
+        ]);
+
+        // database/seeders/DatabaseSeeder.php
+        User::factory()->create(['name' => 'Leader Test', 'email' => 'leader@test.com', 'role' => 'leader', 'password' => bcrypt('password')]);
+
+        $leader = User::where('role', 'leader')->first();
+        $team = $leader->teamsAsLeader()->create(['name' => 'Équipe Alpha', 'description' => 'Première équipe']);
+
+        $leader->projects()->create(['name' => 'Site Web TeamLink', 'description' => 'Refonte complète']);
+
+
+
     }
 }

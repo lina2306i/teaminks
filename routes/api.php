@@ -38,19 +38,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/team', [TeamController::class, 'team']); // liste équipes
         Route::post('/teams/accept', [TeamController::class, 'accept']) ;// accepter membre
         Route::delete('/teams/remove', [TeamController::class, 'remove']); //  supprime un membre ou la team
-        Route::post('/projects', [ProjectController::class, 'store']); // créer projet
-    });
+     });
 
     // Leader + Admin
-    Route::middleware('role:leader,admin')->group(function () {
-        Route::delete('/projects/{id}', [ProjectController::class, 'destroy']); // supprimer projet
-    });
+
 
     // Admin only
-    Route::middleware('role:admin')->group(function () {
-        Route::get('/admin/users', [AdminController::class, 'index']); // liste users
-        Route::delete('/admin/users/{id}', [AdminController::class, 'destroy']); // supprimer user
-    });
+
 
     // Member only
     Route::middleware('role:member')->group(function () {
@@ -69,8 +63,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
 
 
-/*Route::middleware('')->group(function () {
-    Route::get('
-    ', [AuthController::class,'
-    ']);
-});*/
+
+
+// ────────── FIN SPRINT 2 ──────────

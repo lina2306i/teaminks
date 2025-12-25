@@ -1,0 +1,60 @@
+@extends('layouts.appW')
+
+sa marche
+
+@section('contentW')
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card bg-gray-800 text-white shadow-2xl">
+                <div class="card-header bg-gradient-info py-4 text-center">
+                    <h3 class="fw-bold">Create New Task</h3>
+                </div>
+                <div class="card-body p-5">
+                    <form action="{{ route('leader.tasks.store') }}" method="POST">
+                        @csrf
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Project</label>
+                            <select name="project_id" class="form-select bg-gray-700 border-gray-600 text-white" required>
+                                @foreach(auth()->user()->projects as $project)
+                                    <option value="{{ $project->id }}">{{ $project->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Title</label>
+                            <input type="text" name="title" class="form-control bg-gray-700 border-gray-600 text-white" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea name="description" rows="5" class="form-control bg-gray-700 border-gray-600 text-white"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Assign to</label>
+                            <select name="assigned_to" class="form-select bg-gray-700 border-gray-600 text-white">
+                                <option value="">Not assigned</option>
+                                @foreach($teamMembers as $member)
+                                    <option value="{{ $member->id }}">{{ $member->name }}</option>
+                                    <option value="{{ $member->id }}">{{ $member->name }} ({{ $member->position ?? 'No position' }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Status</label>
+                            <select name="status" class="form-select bg-gray-700 border-gray-600 text-white">
+                                <option value="todo">To Do</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="d-flex gap-3 justify-content-end">
+                            <a href="{{ route('leader.tasks.index') }}" class="btn btn-outline-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary btn-lg">Create Task</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
