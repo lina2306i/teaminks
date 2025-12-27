@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Task extends Model
 {
@@ -10,34 +12,29 @@ class Task extends Model
         'project_id',
         'title',
         'description',
-        'subtasks',        // nouveau
-        'start_at',        // nouveau
+        'start_at',
         'due_date',
         'assigned_to',
         'status',
-        'difficulty',      // nouveau
-        'points',          // nouveau
-        'has_subtasks', // si tu l'utilises encore
+        'difficulty',
+        'points',
     ];
+    //'subtasks', nouveau == 'has_subtasks', //partie json a delete
+
 
 
     protected $casts = [
         'due_date'  => 'date:d/m/Y H:i',         // affiche seulement la date
         'start_at'  => 'date:d/m/Y H:i',         // même format pour start_at
-        'subtasks'  => 'array',              // important : Laravel convertit automatiquement JSON ↔ array
+        // 'subtasks'  => 'array',  important : Laravel convertit automatiquement JSON ↔ array
     ];
 
     //Bonus : Pour afficher aussi l’heure si besoin
-    protected $casts1 = [
-        'due_date' => 'datetime:d/m/Y H:i',
-    ];
-
-
+    //protected $casts1 = ['due_date' => 'datetime:d/m/Y H:i',];
     // ou 'datetime' si tu veux aussi l'heure
-    protected $casts2 = [ 'due_date' => 'date',  ];
+    //protected $casts2 = [ 'due_date' => 'date',  ];
 
-
-
+    // Relations
     public function project()
     {
         return $this->belongsTo(Project::class);
@@ -48,9 +45,13 @@ class Task extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    // ← AJOUTE CETTE RELATION
+    // RELATION with subtask
     public function subtasks(): HasMany
-    {
-        return $this->hasMany(Subtask::class);
-    }
+{
+    return $this->hasMany(Subtask::class)->orderBy('order_pos');
+    // ou bien
+    //return $this->hasMany(Subtask::class);
+
+}
+
 }

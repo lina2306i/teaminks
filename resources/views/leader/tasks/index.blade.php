@@ -14,42 +14,42 @@
         </a>
     </div>
 
-    <!-- Filtre par projet -->
-    <div class="d-flex flex-wrap gap-3 justify-content-center mb-5">
-
-        <!-- All Tasks -->
-        <a href="{{ route('leader.tasks.index') }}"
-           class="px-5 py-2 rounded-full border transition-all {{ request()->filled(['projectId', 'status']) ? 'border-gray-500 text-gray-400 hover:bg-gray-700 hover:text-white' : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg' }}">
-            All Tasks
-        </a>
-
-        <!-- Filtre par Projet -->
-        @foreach($projects as $project)
-            <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['projectId' => $project->id, 'status' => null])) }}"
-               class="px-5 py-2 rounded-full border transition-all {{ request()->query('projectId') == $project->id && !request()->has('status') ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg' : 'border-blue-500 text-blue-400 hover:bg-blue-600 hover:text-white hover:shadow' }}">
-                {{ $project->name }}
+    <!-- Filtre par projet + statut -->
+    <div class="text-center mb-5">
+        <div class="d-flex flex-wrap gap-3 justify-content-center ">
+            <!-- All Tasks -->
+            <a href="{{ route('leader.tasks.index') }}"
+            class="px-5 py-2 rounded-full border transition-all {{ request()->filled(['projectId', 'status']) ? 'border-gray-500 text-gray-400 hover:bg-gray-700 hover:text-white' : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg' }}">
+                All Tasks
             </a>
-        @endforeach
-        <!-- Séparateur -->
-        <span class="text-gray-500 align-self-center px-3">|</span>
 
-        <!-- Filtre par Statut -->
-        <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'todo', 'projectId' => null])) }}"
-           class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'todo' ? 'bg-secondary text-white border-transparent shadow-lg' : 'border-gray-500 text-gray-400 hover:bg-secondary hover:text-white' }}">
-            To Do
-        </a>
+            <!-- Filtre par Projet -->
+            @foreach($projects as $project)
+                <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['projectId' => $project->id, 'status' => null])) }}"
+                class="px-5 py-2 rounded-full border transition-all {{ request()->query('projectId') == $project->id && !request()->has('status') ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg' : 'border-blue-500 text-blue-400 hover:bg-blue-600 hover:text-white hover:shadow' }}">
+                    {{ $project->name }}
+                </a>
+            @endforeach
+            <!-- Séparateur -->
+            <span class="text-gray-500 align-self-center px-3">|</span>
 
-        <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'in_progress', 'projectId' => null])) }}"
-           class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'in_progress' ? 'bg-warning text-white border-transparent shadow-lg' : 'border-warning text-yellow-400 hover:bg-warning hover:text-white' }}">
-            In Progress
-        </a>
+            <!-- Filtre par Statut -->
+            <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'todo', 'projectId' => null])) }}"
+            class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'todo' ? 'bg-secondary text-white border-transparent shadow-lg' : 'border-gray-500 text-gray-400 hover:bg-secondary hover:text-white' }}">
+                To Do
+            </a>
 
-        <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'completed', 'projectId' => null])) }}"
-           class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'completed' ? 'bg-success text-white border-transparent shadow-lg' : 'border-success text-green-400 hover:bg-success hover:text-white' }}">
-            Completed
-        </a>
+            <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'in_progress', 'projectId' => null])) }}"
+            class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'in_progress' ? 'bg-warning text-white border-transparent shadow-lg' : 'border-warning text-yellow-400 hover:bg-warning hover:text-white' }}">
+                In Progress
+            </a>
+
+            <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'completed', 'projectId' => null])) }}"
+            class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'completed' ? 'bg-success text-white border-transparent shadow-lg' : 'border-success text-green-400 hover:bg-success hover:text-white' }}">
+                Completed
+            </a>
+        </div>
     </div>
-
     <!-- Pas de projets -->
     @if(!$hasProjects)
         <div class="text-center py-10">
@@ -76,7 +76,7 @@
             @foreach($tasks as $task)
                 <div class="col-lg-6 col-xl-4">
                     <div class="card bg-gray-800 text-white shadow-lg border-0 rounded-xl h-100 hover:shadow-2xl hover:border-blue-500 transition-all">
-                        <div class="card-body d-flex flex-column">
+                        <div class="card-body d-flex flex-column p-4">
                             <!-- Titre + Status -->
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h5 class="fw-bold mb-0">
@@ -90,16 +90,45 @@
                             </div>
 
                             <!-- Description -->
-                            <p class="text-gray-300 flex-grow-1 mb-3">
+                            <p class="text-gray-300 flex-grow-1 mb-4">
                                 {{ $task->description ? Str::limit($task->description, 100) : 'No description' }}
                             </p>
 
                             <!-- Infos -->
                             <div class="small text-gray-400 mb-4">
-                                <div><strong>Project:</strong> {{ $task->project->name }}</div>
-                                <div><strong>Assigned to:</strong> {{ $task->assignedTo?->name ?? 'Not assigned' }}</div>
-                                <div><strong>Due:</strong> {{ $task->due_date ? $task->due_date->format('d M Y') : 'No deadline' }}</div>
+                                <div class="d-flex justify-content-between"><strong>Project :</strong> {{ $task->project->name }}</div>
+                                <div class="d-flex justify-content-between mt-1" ><strong>Assigned to :</strong> {{ $task->assignedTo?->name ?? 'Not assigned' }}</div>
+                                <div class="d-flex justify-content-between mt-1"><strong>Deadline :</strong> {{ $task->start_at ? $task->start_at ->format('d M Y') : 'No deadline' }} → {{ $task->due_date ? $task->due_date->format('d M Y') : 'No deadline' }}</div>
+                                <div class="d-flex justify-content-between mt-1"><strong>Points :</strong> {{ $task->points }}</div>
+                                <div class="d-flex justify-content-between mt-1"><strong>Difficulty :</strong> {{ ucfirst($task->difficulty) }} </div>
                             </div>
+                            <!-- Subtasks aperçu -->
+                            @if($task->subtasks->count() > 0)
+                                <div class="border-top border-gray-700 pt-3 mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-warning fw-semibold">Subtasks ({{ $task->subtasks->count() }})</small>
+                                        <small class="text-gray-500">
+                                            {{ $task->subtasks->where('status', 'completed')->count() }}/{{ $task->subtasks->count() }} completed
+                                        </small>
+                                    </div>
+                                    <div class="small">
+                                        @foreach($task->subtasks->take(3) as $subtask)
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <i class="fas fa-circle {{ $subtask->status == 'completed' ? 'text-success' : 'text-warning' }} fs-6"></i>
+                                                <span class="flex-grow-1">{{ Str::limit($subtask->title, 30) }}</span>
+                                                <span class=" badge bg-gray-800 ms-auto">Priority : {{ $subtask->priority }}</span>
+                                            </div>
+                                        @endforeach
+                                        @if($task->subtasks->count() > 3)
+                                            <small class="text-gray-500 d-block text-end">
+                                                <a href="{{ route('leader.tasks.show', $task) }}" class="text-info">
+                                                    ... +{{ $task->subtasks->count() - 3 }} more
+                                                </a>
+                                            </small>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
 
                             <!-- Actions -->
                             <div class="d-flex gap-2 mt-auto">
@@ -109,7 +138,7 @@
                                     @csrf @method('DELETE')
                                     <button type="submit"
                                             class="btn btn-sm btn-outline-danger flex-fill"
-                                            onclick="return confirm('Delete this task?')">
+                                            onclick="return confirm('Delete this task and all subtasks?')">
                                         Delete
                                     </button>
                                 </form>

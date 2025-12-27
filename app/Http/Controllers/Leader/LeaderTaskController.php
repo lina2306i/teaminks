@@ -15,15 +15,6 @@ class LeaderTaskController extends Controller
      */
     public function index(Request $request)
     {
-        /*$tasks = Auth::user()
-            ->projects()
-            ->with('tasks.assignedTo')
-            ->get()
-            ->pluck('tasks')
-            ->flatten()
-            ->sortByDesc('created_at');*/
-        //update avec vue ::
-
         $projectId = $request->query('projectId');
         $status = $request->query('status');
         // Récupère tous les projets du leader pour le filtre
@@ -31,7 +22,7 @@ class LeaderTaskController extends Controller
 
         // Requête de base sur les tâches
         $tasksQuery = Task::query()
-            ->with('project', 'assignedTo')
+            ->with('project', 'assignedTo' , 'subtasks')
             ->whereHas('project', function ($query) {
                 $query->where('leader_id', Auth::id());
             });
@@ -53,12 +44,12 @@ class LeaderTaskController extends Controller
         $hasProjects = $projects->count() > 0;
         $hasTasks = $tasks->count() > 0;
 
-        return view('leader.tasks.index', compact(
-            'tasks',
-            'projects',
-            'hasProjects',
-            'hasTasks'
-        ));
+        return view('leader.tasks.index', [
+            'tasks' => $tasks,
+            'projects' => $projects,
+            'hasProjects' => $projects->count() > 0,
+            'hasTasks' => $tasks->count() > 0
+        ]);
 
        // return view('leader.tasks.index', compact('tasks'));
     }
@@ -88,22 +79,63 @@ class LeaderTaskController extends Controller
             'project_id' => 'required|exists:projects,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'subtasks' => 'nullable|array',
-            'subtasks.*' => 'string|max:255',
             'start_at' => 'nullable|date',
             'due_date' => 'nullable|date|after:start_at',
-            'assigned_to' => 'nullable|exists:users,id',
-            'difficulty' => 'required|in:easy,medium,hard',
+            'assigned_to' => 'nullable|exists:users,id',   //Rendre assigned_to facultatif ← déjà nullable
+            'difficulty' => 'required|in:easy,medium,hard,challenging',
             'points' => 'required|integer|min:1',
+
+            'subtasks' => 'nullable|array',
+            'subtasks.*.title' => 'required_with:subtasks|string|max:255',
+            'subtasks.*.status' => 'required_with:subtasks|in:pending,in_progress,completed',
+            'subtasks.*.assigned_to' => 'nullable|exists:users,id',   //Rendre assigned_to facultatif ← déjà nullable
+            'subtasks.*.priority' => 'required_with:subtasks|integer|min:1|max:5',
+            'subtasks.*.due_date' => 'nullable|date',
         ]);
 
+        /*
         $project = Project::where('leader_id', Auth::id())->findOrFail($validated['project_id']);
 
         // Tu peux sauvegarder les subtasks séparément ou en JSON selon ton modèle
-        $project->tasks()->create($validated);
+        $task=$project->tasks()->create($validated);
 
-        return redirect()->route('leader.tasks.index')
-            ->with('success', 'Task created successfully!');
+        if (!empty($validated['subtasks'])) {
+            /*foreach ($validated['subtasks'] as $subtaskData) {
+                $task->subtasks()->create([
+                    'title'       => $subtaskData['title'] ?? null,
+                    'status'      => $subtaskData['status'] ?? 'pending',
+                    'assigned_to' => $subtaskData['assigned_to'] ?? null,
+                    'priority'    => $subtaskData['priority'] ?? 3,
+                    'due_date'    => $subtaskData['due_date'] ?? null,
+                ]);
+            }* /
+            foreach ($validated['subtasks'] as $i => $title) {
+                $task->subtasks()->create([
+                    'title' => $title,
+                    'order_pos' => $i+1,
+                ]);
+            }
+        }
+
+        */
+         /*$task = Task::create($validated);
+
+        if (!empty($validated['subtasks'])) {
+            foreach ($validated['subtasks'] as $sub) {
+                $task->subtasks()->create($sub);
+            }
+        }*/
+        $project = Project::where('leader_id', Auth::id())->findOrFail($validated['project_id']);
+
+        $task = $project->tasks()->create($validated);
+
+        if (!empty($validated['subtasks'])) {
+            foreach ($validated['subtasks'] as $index => $sub) {
+                $task->subtasks()->create(array_merge($sub, ['order_pos' => $index + 1]));
+            }
+        }
+
+        return redirect()->route('leader.tasks.index')->with('success', 'Task created successfully!');
     }
 
     /**
@@ -112,8 +144,7 @@ class LeaderTaskController extends Controller
     public function show(Task $task)
     {
         $this->authorizeTask($task);
-        $task->load(['project', 'assignedTo']);
-
+        $task->load(['subtasks','project','assignedTo']);
         return view('leader.tasks.show', compact('task'));
     }
 
@@ -127,9 +158,13 @@ class LeaderTaskController extends Controller
         $projects = Auth::user()->projects;
         $teamMembers = Auth::user()->teamsAsLeader->pluck('members')->flatten()->unique('id');
 
-        $task->load('subtasks');
+       // $task->load(['subtasks', 'project', 'assignedTo']);
+       // return view('leader.tasks.edit', compact('task', 'projects', 'teamMembers'));
+
+        $task->load('subtasks.assignedTo');
 
         return view('leader.tasks.edit', compact('task', 'projects', 'teamMembers'));
+
     }
 
     /**
@@ -143,15 +178,21 @@ class LeaderTaskController extends Controller
             'project_id'  => 'required|exists:projects,id',
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_to' => 'nullable|exists:users,id', //Rendre assigned_to facultatif ← déjà nullable
             'status'      => 'required|in:todo,in_progress,completed',
             'start_at' => 'nullable|date',
             'due_date' => 'nullable|date|after:start_at',
             'user_id' => 'nullable|exists:users,id',
             'difficulty' => 'required|in:easy,medium,hard,challenging',
             'points' => 'required|integer|min:1',
+
             'subtasks' => 'nullable|array',
-            'subtasks.*' => 'string|max:255',
+            //'subtasks.*' => 'string|max:255',
+            'subtasks.*.title' => 'required_with:subtasks|string|max:255',
+            'subtasks.*.status' => 'required_with:subtasks|in:pending,in_progress,completed',
+            'subtasks.*.assigned_to' => 'nullable|exists:users,id', //Rendre assigned_to facultatif ← déjà nullable
+            'subtasks.*.priority' => 'required_with:subtasks|integer|min:1|max:5',
+            'subtasks.*.due_date' => 'nullable|date',
     ]);
 
         // Vérifie que le nouveau projet (si changé) appartient au leader
@@ -163,12 +204,30 @@ class LeaderTaskController extends Controller
 
         // Gestion des subtasks
         $task->subtasks()->delete(); // Supprime les anciennes
+        // Créer les nouvelles
         if (!empty($validated['subtasks'])) {
-            foreach ($validated['subtasks'] as $subtaskTitle) {
-                if (!empty(trim($subtaskTitle))) {
-                    $task->subtasks()->create(['title' => trim($subtaskTitle)]);
-                }
+            /*foreach ($validated['subtasks'] as $subtaskData) {
+                $task->subtasks()->create([
+                    'title'       => $subtaskData['title'] ?? null,
+                    'status'      => $subtaskData['status'] ?? 'pending',
+                    'assigned_to' => $subtaskData['assigned_to'] ?? null,
+                    'priority'    => $subtaskData['priority'] ?? 3,
+                    'due_date'    => $subtaskData['due_date'] ?? null,
+                ]);
+            }*/
+            /*foreach ($validated['subtasks'] as $i => $title) {
+                $task->subtasks()->create([
+                    'title' => $title,
+                    'order_pos' => $i+1,
+                ]);
+            }*/
+           /* foreach ($validated['subtasks'] as $sub) {
+                $task->subtasks()->create($sub);
+            }*/
+            foreach ($validated['subtasks'] as $index => $sub) {
+                $task->subtasks()->create(array_merge($sub, ['order_pos' => $index + 1]));
             }
+
         }
 
         return redirect()->route('leader.tasks.index', $task)
