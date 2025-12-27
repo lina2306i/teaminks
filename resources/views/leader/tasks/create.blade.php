@@ -47,7 +47,11 @@
                                         </button>
                                     </label>
 
-                                    <div id="subtasks-container" class="mt-3">
+                                    @error('subtasks')
+                                        <div class="text-danger small mb-2">{{ $message }}</div>
+                                    @enderror
+
+                                    <div id="subtasks-container" class="mt-3 space-y-3">
                                         @php
                                             // Récupère les subtasks existantes (edit) ou old input (create)
                                             // Pour create : old() ou tableau vide
@@ -281,10 +285,32 @@
 @endsection
 
 @push('scripts')
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
 <script>
 
 
 let subtaskIndex = {{ count(old('subtasks', $task->subtasks ?? [])) }};
+
+// Initialiser Sortable
+    new Sortable(document.getElementById('subtasks-container'), {
+        animation: 150,
+        ghostClass: 'bg-gray-900',
+        handle: '.subtask-item',
+        onEnd: function () {
+            // Mettre à jour les index des inputs après drag & drop
+            const items = document.querySelectorAll('.subtask-item');
+            items.forEach((item, index) => {
+                item.querySelectorAll('input, select').forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        input.setAttribute('name', name.replace(/\[\d+\]/, `[${index}]`));
+                    }
+                });
+            });
+        }
+    });
 
 function addSubTask() {
     const container = document.getElementById('subtasks-container');

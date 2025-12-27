@@ -202,6 +202,11 @@ Route::middleware(['auth', 'role:leader'])
 
 
         // ==================== PROFILE & OTHERS ====================
+        // principe de notify l user par sa tache
+        Route::post('/notify', [NotificationController::class, 'store'])
+            ->middleware('auth')
+            ->name('notify.store');
+
         // Autres :: Notes, Notifications, Profile, Folders
         Route::get('notifications', [LeaderController::class, 'notifications'])->name('notifications');
         Route::get('notes', [LeaderController::class, 'notes'])->name('notes');

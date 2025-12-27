@@ -8,6 +8,12 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\Notification;
+use App\Events\LeaderNotification;
+use App\Http\Resources\TaskResource;
+use Carbon\Carbon;
+
+
 class LeaderTaskController extends Controller
 {
     /**
@@ -136,7 +142,19 @@ class LeaderTaskController extends Controller
                 $task->subtasks()->create(array_merge($sub, ['order_pos' => $index + 1]));
             }
         }
+/*
+        // notify the user
+        $notification =  Notification::create([
+            'from' => Auth::id(),
+            'to' => $task->user_id,
+            'title' => 'New Task!',
+            'message' => 'New Task : ' . $task->title . ' assigned to your!',
+            'type' => 'info'
+        ]);
+        broadcast(new LeaderNotification($notification));
+        return response()->json(['message' => 'Task Created Successfully!', 'task' => TaskResource::make($task->load('subtasks', 'user'))], 200);
 
+*/
         return redirect()->route('leader.tasks.index')->with('success', 'Task created successfully!');
     }
 
@@ -146,7 +164,7 @@ class LeaderTaskController extends Controller
     public function show(Task $task)
     {
         $this->authorizeTask($task);
-        $task->load(['subtasks','project','assignedTo']);
+        $task->load(['subtasks','project','assignedTo']); // pour avoir user name, profile, position
         return view('leader.tasks.show', compact('task'));
     }
 

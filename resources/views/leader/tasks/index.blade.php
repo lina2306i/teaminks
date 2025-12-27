@@ -75,14 +75,14 @@
         <div class="row g-4">
             @foreach($tasks as $task)
                 <div class="col-lg-6 col-xl-4">
-                    <div class="card bg-gray-800 text-white shadow-lg border-0 rounded-xl h-100 hover:shadow-2xl hover:border-blue-500 transition-all">
+                    <div class="card bg-gray-800 text-white shadow-lg border-0 rounded-xl h-100  overflow-hidden hover:shadow-2xl hover:border-blue-500 transition-all">
                         <!-- Icône Pin si épinglée ::  En haut à droite de la carte -->
                         @if($task->pinned)
                             <div class="position-absolute top-0 end-0 p-3">
                                 <i class="fas fa-thumbtack text-primary fs-4" title="Pinned task"></i>
                             </div>
                         @endif
-                        <div class="card-body d-flex flex-column p-4">
+                        <div class="card-body   p-5 d-flex flex-column ">
                             <!-- Titre + Status -->
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h5 class="fw-bold mb-0">
@@ -95,10 +95,101 @@
                                 </span>
                             </div>
 
+                            <!-- Barre de progression hybride intelligente v3-->
+                            <div class="mb-4">
+                                @php
+                                    // 1. Cas avec subtasks → priorité à la complétion des subtasks
+                                    if ($task->subtasks->count() > 0) {
+                                        $completedSubtasks = $task->subtasks->where('status', 'completed')->count();
+                                        $totalSubtasks = $task->subtasks->count();
+                                        $progress = round(($completedSubtasks / $totalSubtasks) * 100);
+                                        $progressText = "$completedSubtasks / $totalSubtasks subtasks";
+                                        $progressType = 'subtasks';
+                                    }
+                                    // 2. Cas sans subtasks → progression basée sur status + temps écoulé
+                                    else {
+                                        $progressType = 'status_time';
+
+                                        // Progression selon status
+                                        $statusProgress = match($task->status) {
+                                            'completed' => 100,
+                                            'in_progress' => 50,
+                                            default => 0, // todo / pending
+                                        };
+
+                                        // Progression temporelle (si start_at et due_date définis)
+                                        $timeProgress = 0;
+                                        if ($task->start_at && $task->due_date) {
+                                            $now = now();
+                                            $start = $task->start_at;
+                                            $end = $task->due_date;
+
+                                            if ($now->lt($start)) {
+                                                $timeProgress = 0;
+                                            } elseif ($now->gt($end)) {
+                                                $timeProgress = 100;
+                                            } else {
+                                                $totalDuration = $start->diffInSeconds($end);
+                                                $elapsed = $start->diffInSeconds($now);
+                                                $timeProgress = round(($elapsed / $totalDuration) * 100);
+                                            }
+                                        }
+
+                                        // Moyenne pondérée : 70% status + 30% temps (ou 100% status si pas de dates)
+                                        $progress = $task->start_at && $task->due_date
+                                            ? round(0.7 * $statusProgress + 0.3 * $timeProgress)
+                                            : $statusProgress;
+
+                                        $progressText = $task->start_at && $task->due_date
+                                            ? "Status + Time ({$timeProgress}% elapsed-deppased)"
+                                            : ucfirst(str_replace('_', ' ', $task->status));
+                                    }
+
+                                    // Couleur de la barre
+                                    $barColor = match(true) {
+                                        $progress == 100 => 'bg-success',
+                                        $progress >= 70 => 'bg-info',
+                                        $progress >= 40 => 'bg-warning',
+                                        default => 'bg-danger',
+                                    };
+                                @endphp
+
+                                <!-- Texte descriptif -->
+                                <div class="d-flex justify-content-between small text-gray-400 mb-1">
+                                    <span>Progress</span>
+                                    <span>{{ $progress }}% • {{ $progressText }}</span>
+                                </div>
+
+                                <!-- Barre -->
+                                <div class="progress bg-gray-700 rounded" style="height: 12px;">
+                                    <div class="progress-bar {{ $barColor }} rounded"
+                                        role="progressbar"
+                                        style="width: {{ $progress }}%"
+                                        aria-valuenow="{{ $progress }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100">
+                                    </div>
+                                </div>
+
+                                <!-- Indicateur visuel supplémentaire -->
+                                <div class="mt-2 text-end">
+                                    @if($progress == 100)
+                                        <span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i> Completed</span>
+                                    @elseif($task->status == 'completed')
+                                        <span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i> Done</span>
+                                    @elseif($progress >= 80)
+                                        <span class="text-info"><i class="fas fa-fire me-1"></i> Almost there!</span>
+                                    @elseif($progress < 30 && $task->due_date && now()->gt($task->due_date->subDays(2)))
+                                        <span class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-1"></i> At risk</span>
+                                    @endif
+                                </div>
+                            </div>
+
                             <!-- Description -->
                             <p class="text-gray-300 flex-grow-1 mb-4">
                                 {{ $task->description ? Str::limit($task->description, 100) : 'No description' }}
                             </p>
+
 
                             <!-- Infos -->
                             <div class="small text-gray-400 mb-4">
@@ -107,7 +198,20 @@
                                 <div class="d-flex justify-content-between mt-1"><strong>Deadline :</strong> {{ $task->start_at ? $task->start_at ->format('d M Y') : 'No deadline' }} → {{ $task->due_date ? $task->due_date->format('d M Y') : 'No deadline' }}</div>
                                 <div class="d-flex justify-content-between mt-1"><strong>Points :</strong> {{ $task->points }}</div>
                                 <div class="d-flex justify-content-between mt-1"><strong>Difficulty :</strong> {{ ucfirst($task->difficulty) }} </div>
+
                             </div>
+
+
+
+                            <!-- Spacer <div class="flex-grow-1"></div>-->
+
+                             <!--Temps restant / Overdue Dans la carte ou détail -->
+                            <!-- Sous-section: Badge Overdue pour Task (maintenant affiché !) -->
+                            <!-- Badge wrapper FIX -->
+                            <div class="mt-auto pt-3 text-end">
+                                <x-task-deadline-badge :task="$task" />
+                            </div>
+
                             <!-- Subtasks aperçu -->
                             @if($task->subtasks->count() > 0)
                                 <div class="border-top border-gray-700 pt-3 mb-4">

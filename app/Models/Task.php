@@ -63,4 +63,19 @@ class Task extends Model
         return $query->orderByDesc('pinned')->orderByDesc('created_at');
     }
 
+    //option; pas utiliser ::! Puis dans la vue : {{ $task->progress }}% -- barre de progression intelligente,
+    public function getProgressAttribute()
+    {
+        if ($this->subtasks->count() > 0) {
+            $completed = $this->subtasks->where('status', 'completed')->count();
+            return round(($completed / $this->subtasks->count()) * 100);
+        }
+
+        return match($this->status) {
+            'completed' => 100,
+            'in_progress' => 50,
+            default => 0,
+        };
+    }
+
 }

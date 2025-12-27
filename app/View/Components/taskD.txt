@@ -1,0 +1,184 @@
+<?php
+
+namespace App\View\Components;
+
+use Illuminate\View\Component;
+use Carbon\Carbon;
+
+class TaskDeadlineBadge extends Component
+{
+    public $task;
+
+    public $daysLeft;
+    public $isOverdue;
+    public $isToday;
+    public $isTomorrow;
+    public $isSoon;
+
+    public $label;
+    public $color;
+
+    public $state; // overdue | today | tomorrow | soon | normal
+
+
+    public function __construct($task)
+    {
+        $this->task = $task;
+
+        //$this->label = null;
+        //$this->state = null;
+        if (!$task->due_date) {
+             $now = Carbon::now();
+            $due = Carbon::parse($task->due_date);
+
+            $diffInSeconds = $now->diffInSeconds($due, false);
+
+            if ($diffInSeconds < 0) {
+                // En retard
+                $days = abs(floor($diffInSeconds / 86400));
+                $hours = abs(floor(($diffInSeconds % 86400) / 3600));
+                $minutes = abs(floor(($diffInSeconds % 3600) / 60));
+
+                $this->label = "⛔ Overdue by {$days}d {$hours}h {$minutes}m";
+                $this->color = 'danger';
+            } else {
+                // Encore disponible
+                $days = floor($diffInSeconds / 86400);
+                $hours = floor(($diffInSeconds % 86400) / 3600);
+                $minutes = floor(($diffInSeconds % 3600) / 60);
+
+                if ($days === 0 && $hours === 0) {
+                    $this->label = "⏰ Due in {$minutes}m";
+                    $this->color = 'warning';
+                } elseif ($days === 0) {
+                    $this->label = "⏳ Due in {$hours}h {$minutes}m";
+                    $this->color = 'info';
+                } else {
+                    $this->label = "📅 Due in {$days}d {$hours}h";
+                    $this->color = 'success';
+                }
+            }
+        } else {
+            $this->label = 'No deadline';
+            $this->color = 'secondary';
+        }
+
+
+        /*
+         if (!$task->due_date) {
+           return;
+         }
+         $now = Carbon::now();
+        $due = Carbon::parse($task->due_date);
+        // 🔴 OVERDUE
+        if ($now->greaterThan($due)) {
+            $days = $now->diffInDays($due);
+            $this->label = "Overdue by {$days} day" . ($days > 1 ? 's' : '');
+            $this->state = 'overdue';
+            return;
+        }
+        // 🟠 TODAY
+        if ($now->isSameDay($due)) {
+            $hours = $now->diffInHours($due);
+            $minutes = $now->copy()->addHours($hours)->diffInMinutes($due);
+
+            if ($hours > 0) {
+                $this->label = "{$hours}h {$minutes}min left";
+            } else {
+                $this->label = "{$minutes} min left";
+            }
+
+            $this->state = 'today';
+            return;
+        }
+        // 🟡 TOMORROW
+        if ($now->copy()->addDay()->isSameDay($due)) {
+            $this->label = "Tomorrow";
+            $this->state = 'tomorrow';
+            return;
+        }
+        // 🟠 SOON (≤ 3 days)
+        $days = $now->diffInDays($due);
+        if ($days <= 3) {
+            $this->label = "{$days} days left";
+            $this->state = 'soon';
+            return;
+        }
+        // 🟢 NORMAL
+        $this->label = "{$days} days left";
+        $this->state = 'normal';
+        */
+
+        /*if ($task->due_date) {
+            //$now = now();
+            $now = Carbon::now();
+
+            $due = $task->due_date;
+            //$due = \Carbon\Carbon::parse($task->due_date);
+
+
+            $this->daysLeft = $now->diffInDays($due, false); // négatif si passé
+            $this->isOverdue = $now->gt($due);
+            $this->isToday = $now->isSameDay($due);
+            $this->isTomorrow = $this->daysLeft === 1;
+            $this->isSoon = $this->daysLeft <= 2 && $this->daysLeft > 0 && !$this->isToday;
+            //$isSoon = $daysLeft <= 3 && $daysLeft > 0;
+        }*/
+    }
+
+
+
+    public function render()
+    {
+        return view('components.task-deadline-badge');
+    }
+}
+
+-----------------------------
+
+
+
+
+<?php
+
+namespace App\View\Components;
+
+use Illuminate\View\Component;
+    use Carbon\Carbon;
+
+class SubtaskDeadlineBadge extends Component
+{
+    public $subtask;
+    public $daysLeft;
+    public $isOverdue;
+    public $isToday;
+    public $isTomorrow;
+    public $isSoon;
+
+    public function __construct($subtask)
+    {
+        $this->subtask = $subtask;
+
+        if ($subtask->due_date) {
+            $now = now();
+            //    $now = Carbon::now();
+
+            $due = $subtask->due_date;
+            //$due = \Carbon\Carbon::parse($subtask->due_date);
+
+
+            $this->daysLeft = $now->diffInDays($due, false);
+            $this->isOverdue = $now->gt($due);
+            $this->isToday = $now->isSameDay($due);
+            $this->isTomorrow = $this->daysLeft === 1;
+            $this->isSoon = $this->daysLeft <= 2 && $this->daysLeft > 0 && !$this->isToday;
+            //$isSoon = $daysLeft <= 3 && $daysLeft > 0;
+
+        }
+    }
+
+    public function render()
+    {
+        return view('components.subtask-deadline-badge');
+    }
+}
