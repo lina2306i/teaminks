@@ -76,6 +76,12 @@
             @foreach($tasks as $task)
                 <div class="col-lg-6 col-xl-4">
                     <div class="card bg-gray-800 text-white shadow-lg border-0 rounded-xl h-100 hover:shadow-2xl hover:border-blue-500 transition-all">
+                        <!-- Icône Pin si épinglée ::  En haut à droite de la carte -->
+                        @if($task->pinned)
+                            <div class="position-absolute top-0 end-0 p-3">
+                                <i class="fas fa-thumbtack text-primary fs-4" title="Pinned task"></i>
+                            </div>
+                        @endif
                         <div class="card-body d-flex flex-column p-4">
                             <!-- Titre + Status -->
                             <div class="d-flex justify-content-between align-items-start mb-3">
@@ -130,10 +136,20 @@
                                 </div>
                             @endif
 
-                            <!-- Actions -->
+                            <!-- Actions + Bouton Pin/Unpin-->
                             <div class="d-flex gap-2 mt-auto">
                                 <a href="{{ route('leader.tasks.show', $task) }}" class="btn btn-sm btn-outline-info flex-fill">View</a>
                                 <a href="{{ route('leader.tasks.edit', $task) }}" class="btn btn-sm btn-outline-warning flex-fill">Edit</a>
+
+                                <!-- Bouton Pin/Unpin :: Bouton Pin dans les actions -->
+                                <form action="{{ route('leader.tasks.pin', $task) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm {{ $task->pinned ? 'btn-primary' : 'btn-outline-primary' }} flex-fill">
+                                        <i class="fas fa-thumbtack me-1"></i>
+                                        {{ $task->pinned ? 'Unpin' : 'Pin' }}
+                                    </button>
+                                </form>
+
                                 <form action="{{ route('leader.tasks.destroy', $task) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
                                     <button type="submit"
@@ -147,6 +163,8 @@
                     </div>
                 </div>
             @endforeach
+
+
         </div>
 
         <!-- Pagination  <div class="d-flex justify-content-center mt-5">

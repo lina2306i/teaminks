@@ -152,6 +152,7 @@ Route::middleware(['auth', 'role:leader'])
             'update' => 'tasks.update',
             'destroy' => 'tasks.destroy',
         ]);
+        Route::post('tasks/{task}/pin', [LeaderTaskController::class, 'pin'])->name('tasks.pin');
 
         Route::resource('tasks', LeaderTaskController::class)
             ->only(['index', 'create', 'store', 'show']);

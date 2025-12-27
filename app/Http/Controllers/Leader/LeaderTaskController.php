@@ -37,6 +37,8 @@ class LeaderTaskController extends Controller
 
         // Tri + pagination directement sur la query
         $tasks = $tasksQuery
+            ->with('project', 'assignedTo', 'subtasks')
+            ->pinnedFirst() // ← épinglées en haut
             ->latest()
             ->paginate(10)
             ->appends(['projectId' => $projectId]); // garde le filtre dans les liens de pagination
@@ -245,6 +247,20 @@ class LeaderTaskController extends Controller
 
         return redirect()->route('leader.tasks.index')
             ->with('success', 'Task deleted successfully.');
+    }
+
+    /**
+     * Toggle pin status of a task
+     */
+    public function pin(Task $task)
+    {
+        $this->authorizeTask($task);
+
+        $task->pinned = !$task->pinned;
+        $task->pinned_at = $task->pinned ? now() : null;
+        $task->save();
+
+        return back()->with('success', $task->pinned ? 'Task pinned to top!' : 'Task unpinned.');
     }
 
     /**

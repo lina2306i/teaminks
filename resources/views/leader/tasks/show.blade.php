@@ -11,6 +11,13 @@
                     </a>
                     <div class="d-flex gap-3">
                         <a href="{{ route('leader.tasks.edit', $task) }}" class="btn btn-warning shadow">Edit Task</a>
+                        <form action="{{ route('leader.tasks.pin', $task) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn {{ $task->pinned ? 'btn-primary shadow' : 'btn-outline-primary shadow' }}">
+                                <i class="fas fa-thumbtack me-2"></i>
+                                {{ $task->pinned ? 'Unpin' : 'Pin to top' }}
+                            </button>
+                        </form>
                         <form action="{{ route('leader.tasks.destroy', $task) }}" method="POST">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-danger shadow" onclick="return confirm('Delete this task and all subtasks?')">
@@ -98,6 +105,17 @@
 
                                         <dt class="col-sm-4 text-gray-400">Deadline</dt>
                                         <dd class="col-sm-8">{{ $task->due_date ? $task->due_date->format('d M Y , h:m ') : 'Not set' }}</dd>
+
+                                        <dt class="col-sm-4 text-gray-400">Pinned</dt>
+                                        <dd class="col-sm-8">
+                                            @if($task->pinned)
+                                                <span class="badge bg-primary">
+                                                    <i class="fas fa-thumbtack me-1"></i> Pinned
+                                                </span>
+                                            @else
+                                                <span class="text-gray-500">Not pinned</span>
+                                            @endif
+                                        </dd>
                                     </dl>
                                 </div>
                             </div>
@@ -106,6 +124,13 @@
                         <!-- Boutons en bas (répétés pour mobile) -->
                         <div class="d-flex flex-column d-md-none gap-3 mt-5">
                             <a href="{{ route('leader.tasks.edit', $task) }}" class="btn btn-warning">Edit Task</a>
+                            <form action="{{ route('leader.tasks.pin', $task) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn {{ $task->pinned ? 'btn-primary' : 'btn-outline-primary' }}">
+                                    <i class="fas fa-thumbtack me-2"></i>
+                                    {{ $task->pinned ? 'Unpin' : 'Pin to top' }}
+                                </button>
+                            </form>
                             <form action="{{ route('leader.tasks.destroy', $task) }}" method="POST">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this task?')">Delete Task</button>

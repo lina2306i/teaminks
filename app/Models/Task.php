@@ -18,6 +18,7 @@ class Task extends Model
         'status',
         'difficulty',
         'points',
+        'pinned',
     ];
     //'subtasks', nouveau == 'has_subtasks', //partie json a delete
 
@@ -27,6 +28,8 @@ class Task extends Model
         'due_date'  => 'date:d/m/Y H:i',         // affiche seulement la date
         'start_at'  => 'date:d/m/Y H:i',         // même format pour start_at
         // 'subtasks'  => 'array',  important : Laravel convertit automatiquement JSON ↔ array
+        'pinned' => 'boolean',
+        'pinned_at' => 'datetime',
     ];
 
     //Bonus : Pour afficher aussi l’heure si besoin
@@ -47,11 +50,17 @@ class Task extends Model
 
     // RELATION with subtask
     public function subtasks(): HasMany
-{
-    return $this->hasMany(Subtask::class)->orderBy('order_pos');
-    // ou bien
-    //return $this->hasMany(Subtask::class);
+    {
+        return $this->hasMany(Subtask::class)->orderBy('order_pos');
+        // ou bien
+        //return $this->hasMany(Subtask::class);
 
-}
+    }
+
+    // Optionnel : scope pour récupérer les tâches épinglées en premier
+    public function scopePinnedFirst($query)
+    {
+        return $query->orderByDesc('pinned')->orderByDesc('created_at');
+    }
 
 }
