@@ -13,12 +13,16 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
+            // Destinataire (l'utilisateur qui reçoit la notif)
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('notifiable_id')->nullable(); // ex: task_id, post_id, etc.
             $table->string('notifiable_type')->nullable(); // polymorphic
-            $table->string('title');
-            $table->text('message');
+            // Champs principaux
+            $table->string('title'); // titre court
+            $table->text('message'); // corps de la notification
+            // Statut lu / non lu
             $table->boolean('read')->default(false);
+            // Timestamps + soft deletes si tu veux (optionnel mais utile)
             $table->timestamps();
         });
     }

@@ -38,8 +38,15 @@ class TaskDeadlineReminder extends Notification implements ShouldQueue
         return [
             'task_id' => $this->task->id,
             'title'   => $this->task->title,
-            'type'    => $this->type,
-            'message' => $this->type === 'tomorrow' ? 'Due demain' : 'Due aujourd\'hui',
+            //'type'    => $this->type,
+            'type'    => $this->type === 'today' ? 'warning' : 'info',
+            //'message' => $this->type === 'tomorrow' ? 'Due demain' : 'Due aujourd\'hui',
+            'message' => $this->type === 'tomorrow'
+                ? "Due demain ({$this->task->due_date->format('d M Y')})"
+                : "Due aujourd'hui !",
+            // Polymorphisme : important !
+            'notifiable_id'   => $this->task->id,
+            'notifiable_type' => Task::class,
         ];
     }
 }

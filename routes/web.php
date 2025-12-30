@@ -9,6 +9,7 @@ use App\Http\Controllers\Leader\LeaderProjectController;
 use App\Http\Controllers\Leader\LeaderPostController;
 use App\Http\Controllers\Leader\LeaderTeamController;
 use App\Http\Controllers\Leader\LeaderController;
+use App\Http\Controllers\NotificationController;
 
 // Pages publiques
 
@@ -206,6 +207,14 @@ Route::middleware(['auth', 'role:leader'])
         Route::post('/notify', [NotificationController::class, 'store'])
             ->middleware('auth')
             ->name('notify.store');
+        Route::get('/notifications', [NotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])
+            ->name('notifications.read');
+        Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])
+            ->name('notifications.readAll');
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])
+            ->name('notifications.destroy');
 
         // Autres :: Notes, Notifications, Profile, Folders
         Route::get('notifications', [LeaderController::class, 'notifications'])->name('notifications');
