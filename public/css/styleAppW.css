@@ -86,3 +86,13 @@
             color: #ffffff !important;
             border-left-color: #3b82f6 !important;
         }
+
+        /* Amélioration du bouton back to top */
+        #backToTop {
+            transition: all 0.3s ease;
+        }
+
+        #backToTop.opacity-100 {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }

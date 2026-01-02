@@ -13,11 +13,16 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('leader_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('team_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('leader_id')->constrained('users')->onDelete('cascade'); // == user_id | le leader/propriétaire
+            $table->foreignId('team_id')->nullable()->constrained()->onDelete('set null');  // pas exister
             $table->string('name');
             $table->text('description')->nullable();
-            $table->date('due_date')->nullable();
+            $table->dateTime('start_date')->nullable();
+            $table->dateTime('end_date')->nullable();
+            $table->datetime('due_date')->nullable();  //== deadline | date limite du projet
+
+            // On garde due_date pour compatibilité ou on peut le supprimer plus tard
+            // $table->dropColumn('due_date');
             $table->timestamps();
         });
     }

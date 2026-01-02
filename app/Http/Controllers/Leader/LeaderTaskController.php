@@ -46,7 +46,7 @@ class LeaderTaskController extends Controller
             ->with('project', 'assignedTo', 'subtasks')
             ->pinnedFirst() // ← épinglées en haut
             ->latest()
-            ->paginate(10)
+            ->paginate(6)
             ->appends(['projectId' => $projectId]); // garde le filtre dans les liens de pagination
 
         $hasProjects = $projects->count() > 0;
@@ -87,18 +87,27 @@ class LeaderTaskController extends Controller
             'project_id' => 'required|exists:projects,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'status'       => 'required|in:todo,in_progress,completed',
             'start_at' => 'nullable|date',
             'due_date' => 'nullable|date|after:start_at',
             'assigned_to' => 'nullable|exists:users,id',   //Rendre assigned_to facultatif ← déjà nullable
             'difficulty' => 'required|in:easy,medium,hard,challenging',
-            'points' => 'required|integer|min:1',
+            'points' => 'required|integer|min:1|max:6',
+            'priority' => 'required|integer|max:5|min:3',
+            'pinned'       => 'nullable|boolean',
+            'reminder_at'  => 'nullable|date',
+            'notes'        => 'nullable|string',
 
             'subtasks' => 'nullable|array',
             'subtasks.*.title' => 'required_with:subtasks|string|max:255',
             'subtasks.*.status' => 'required_with:subtasks|in:pending,in_progress,completed',
             'subtasks.*.assigned_to' => 'nullable|exists:users,id',   //Rendre assigned_to facultatif ← déjà nullable
             'subtasks.*.priority' => 'required_with:subtasks|integer|min:1|max:5',
+            'subtasks.*.points' => 'required_with:subtasks|integer|min:1|max:5',
             'subtasks.*.due_date' => 'nullable|date',
+
+            'attachments.*' => 'nullable|file|mimes:jpg,png,pdf,doc,docx,xls,xlsx,txt,zip,mp4,|max:10240', // 10MB max
+
         ]);
 
         /*
@@ -142,19 +151,36 @@ class LeaderTaskController extends Controller
                 $task->subtasks()->create(array_merge($sub, ['order_pos' => $index + 1]));
             }
         }
-/*
-        // notify the user
-        $notification =  Notification::create([
-            'from' => Auth::id(),
-            'to' => $task->user_id,
-            'title' => 'New Task!',
-            'message' => 'New Task : ' . $task->title . ' assigned to your!',
-            'type' => 'info'
-        ]);
-        broadcast(new LeaderNotification($notification));
-        return response()->json(['message' => 'Task Created Successfully!', 'task' => TaskResource::make($task->load('subtasks', 'user'))], 200);
+        /*
+                // notify the user
+                $notification =  Notification::create([
+                    'from' => Auth::id(),
+                    'to' => $task->user_id,
+                    'title' => 'New Task!',
+                    'message' => 'New Task : ' . $task->title . ' assigned to your!',
+                    'type' => 'info'
+                ]);
+                broadcast(new LeaderNotification($notification));
+                return response()->json(['message' => 'Task Created Successfully!', 'task' => TaskResource::make($task->load('subtasks', 'user'))], 200);
 
-*/
+        */
+
+        // Gestion des attachments
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('tasks/' . $task->id, 'public');
+
+                $task->attachments()->create([
+                    'filename'     => $file->getClientOriginalName(),
+                    'path'         => $path,
+                    'mime_type'    => $file->getMimeType(),
+                    'size'         => $file->getSize(),
+                    'uploaded_by'  => Auth::id(),
+                ]);
+            }
+
+            $task->update(['attachments_count' => $task->attachments()->count()]);
+        }
         return redirect()->route('leader.tasks.index')->with('success', 'Task created successfully!');
     }
 
@@ -199,12 +225,17 @@ class LeaderTaskController extends Controller
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'assigned_to' => 'nullable|exists:users,id', //Rendre assigned_to facultatif ← déjà nullable
-            'status'      => 'required|in:todo,in_progress,completed',
+            'status'       => 'required|in:todo,in_progress,completed',
             'start_at' => 'nullable|date',
             'due_date' => 'nullable|date|after:start_at',
             'user_id' => 'nullable|exists:users,id',
             'difficulty' => 'required|in:easy,medium,hard,challenging',
-            'points' => 'required|integer|min:1',
+            'points' => 'required|integer|min:1|max:6',
+            'priority' => 'required|integer|max:5|min:3',
+
+            'pinned'       => 'nullable|boolean',
+            'reminder_at'  => 'nullable|date',
+            'notes'        => 'nullable|string',
 
             'subtasks' => 'nullable|array',
             //'subtasks.*' => 'string|max:255',
@@ -213,8 +244,9 @@ class LeaderTaskController extends Controller
             'subtasks.*.assigned_to' => 'nullable|exists:users,id', //Rendre assigned_to facultatif ← déjà nullable
             'subtasks.*.priority' => 'required_with:subtasks|integer|min:1|max:5',
             'subtasks.*.due_date' => 'nullable|date',
-    ]);
 
+            'attachments.*' => 'nullable|file|mimes:jpg,png,pdf,doc,docx,xls,xlsx,txt,zip,mp4|max:10240', // 10MB max
+    ]);
         // Vérifie que le nouveau projet (si changé) appartient au leader
         if ($validated['project_id'] != $task->project_id) {
             Project::where('leader_id', Auth::id())->findOrFail($validated['project_id']);
@@ -250,8 +282,24 @@ class LeaderTaskController extends Controller
 
         }
 
+        // Gestion des attachments
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('tasks/' . $task->id, 'public');
+
+                $task->attachments()->create([
+                    'filename'     => $file->getClientOriginalName(),
+                    'path'         => $path,
+                    'mime_type'    => $file->getMimeType(),
+                    'size'         => $file->getSize(),
+                    'uploaded_by'  => Auth::id(),
+                ]);
+            }
+
+            $task->update(['attachments_count' => $task->attachments()->count()]);
+        }
         return redirect()->route('leader.tasks.index', $task)
-            ->with('success', 'Task updated successfully!');
+                ->with('success', 'Task updated successfully!');
     }
 
     /**

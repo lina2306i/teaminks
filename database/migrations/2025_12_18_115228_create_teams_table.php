@@ -19,7 +19,10 @@ return new class extends Migration
             // Leader de l'équipe
             $table->foreignId('leader_id')
                   ->constrained('users')
+                  ->nullable()
                   ->cascadeOnDelete();
+
+             $table->string('invite_code', 10)->unique();
 
             //$table->string(column: 'invite_code')->unique();  //ex : AB3D-9F2G ou TEAM1234.
             $table->timestamps();

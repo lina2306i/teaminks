@@ -19,4 +19,14 @@ class PostComment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function replies()
+    {
+        return $this->hasMany(PostComment::class, 'parent_id')->where('is_approved', true);
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(PostComment::class, 'parent_id');
+}
 }

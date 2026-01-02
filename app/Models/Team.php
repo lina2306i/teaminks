@@ -51,6 +51,7 @@ class Team extends Model
     {
         return $this->belongsToMany(User::class, 'team_members')
                     ->wherePivot('status', 'accepted')
+                    ->withPivot('role', 'status')
                     ->withTimestamps();
     }
 

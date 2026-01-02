@@ -15,8 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('team_id')->constrained()->onDelete('cascade');
-            $table->enum('status', ['pending', 'accepted'])->default('pending');
+            $table->enum('status', [ 'rejected', 'pending', 'accepted'])->default('pending');  // optionnel : pending/accepted/rejected
+
+            $table->string('role')->default('member'); // ← obligatoire : leader ou member
+
+
             $table->timestamps();
+
+
+
             $table->unique(['user_id', 'team_id']);
         });
     }

@@ -19,6 +19,9 @@ class Subtask extends Model
         'started_at',
         'completed_at',
         'priority',
+        'notes',
+        'estimated_hours',
+        'actual_hours',
     ];
 
     protected $casts = [

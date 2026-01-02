@@ -20,7 +20,8 @@
                 @endforeach
             </ul>
         @else
-            <p class="text-center text-gray-400 py-5">Aucune notification pour le moment.</p>
+            <p class="text-center text-gray-400 py-5">Aucune notification pour le moment.
+                dams leader directory</p>
         @endif
     </div>
 </section>

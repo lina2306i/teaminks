@@ -19,6 +19,13 @@ class LeaderTestSeeder extends Seeder
 {
     public function run(): void
     {
+        // Points champs == Difficultés et leurs points associés (pour gamification / estimation)
+        $difficulties = [
+            'easy'   => [1, 2],
+            'medium' => [3, 4],
+            'hard' => [5],
+            'challenging'=> [6],
+        ];
         // === Supprimer toutes les données existantes ===
        // User::truncate();
 
@@ -34,9 +41,9 @@ class LeaderTestSeeder extends Seeder
             'birthdate' => '1997-06-23',
         ]);
 
-        // === Création de 5 leaders ===
+        // === Création de 4 leaders ===
         $leaders = [];
-        for ($i = 8; $i <= 12; $i++) {
+        for ($i = 1; $i <= 4; $i++) {
             $leaders[] = User::firstOrCreate([
                 'email' => "leader{$i}@teamlinks.com"
             ], [
@@ -50,9 +57,9 @@ class LeaderTestSeeder extends Seeder
 
 
 
-        // 6 membres
+        // 4 membres
         $members = [];
-        for ($i = 1; $i <= 6; $i++) {
+        for ($i = 1; $i <= 4; $i++) {
             $members[] = User::create([
                 'name' => "Membre {$i}",
                 'email' => "member{$i}@teamlinks.com",
@@ -63,7 +70,7 @@ class LeaderTestSeeder extends Seeder
             ]);
         }
 
-        $this->command->info("Seeder TeamLinks complet: 5 leaders, 3 équipes par leader, 3 projets par équipe, 6 membres.");
+        $this->command->info("Seeder TeamLinks complet: 4 leaders, 3 équipes par leader, 3 projets par équipe, 4 membres.");
 
                 // === Pour chaque leader, créer 3 équipes et 3 projets par équipe ===
        /* foreach ($leaders as $leader) {
@@ -86,17 +93,20 @@ class LeaderTestSeeder extends Seeder
         }*/
 
         // === Création des équipes et projets ===
+        // === Pour chaque leader : 3 équipes, 3 projets par équipe, tâches, posts, etc. ===
         foreach ($leaders as $leader) {
             for ($t = 1; $t <= 3; $t++) {
+                // Création de l'équipe
                 $team = $leader->teamsAsLeader()->create([
-                    'name' => "Équipe {$t} - {$leader->name}",
-                    'description' => "Description de l'équipe {$t} de {$leader->name}",
+                    'name' => "Team {$t} - {$leader->name}",
+                    'description' => "Team {$t} managed by {$leader->name}",
                     'invite_code' => strtoupper(bin2hex(random_bytes(4))),
                 ]);
 
                 // Ajouter des membres aléatoires à l'équipe
-                $teamMembers = collect($members)->random(rand(3,6));
-                foreach ($teamMembers as $member) {
+                // Ajout de 3 à 6 membres aléatoires dans l'équipe
+                $selectedMembers = collect($members)->random(rand(2, 4));
+                foreach ($selectedMembers as $member) {
                     $team->members()->attach($member->id, [
                         'status' => 'accepted',
                         'created_at' => now(),
@@ -109,63 +119,93 @@ class LeaderTestSeeder extends Seeder
                     $project = $leader->projects()->create([
                         'team_id' => $team->id,
                         'name' => "Projet {$p} - {$team->name}",
-                        'description' => "Description du projet {$p} pour {$team->name}",
-                        //'start_date' => now()->subDays(rand(0,30)),
-                        //'end_date' => now()->addDays(rand(30,90)),
+                        'description' => "Description for project {$p} in {$team->name}",
+                        'start_date' => now()->subDays(rand(10, 30)),
+                        'end_date' => now()->addDays(rand(30, 120)),
                     ]);
 
                     // 5 tâches par projet
                     for ($taskNum = 1; $taskNum <= 5; $taskNum++) {
+                        $assignedUser = collect([$leader, ...$selectedMembers])->random();
+
+                        $difficultyKey = array_rand($difficulties);
+                        $points = $difficulties[$difficultyKey][array_rand($difficulties[$difficultyKey])];
+                        // Dates réalistes
+                        $startAt = now()->addDays(rand(-10, 5)); // peut être dans le passé ou futur proche
+                        $dueDate = (bool) rand(0, 1) ? $startAt->copy()->addDays(rand(3, 30)) : null;
+
                         $task = Task::create([
                             'project_id' => $project->id,
                             'title' => "Task {$taskNum} - {$project->name}",
-                            'description' => "Description de la tâche {$taskNum}",
-                            'assigned_to' => collect(array_merge([$leader], $members))->random()->id,
-                            'start_at' => now(),
-                            'due_date' => now()->addDays(rand(3,14)),
-                            'difficulty' => ['easy','medium','hard'][array_rand(['easy','medium','hard'])],
-                            'points' => rand(1,5),
+                            'description' => "Detailed description for task {$taskNum}",
+                            'assigned_to' => $assignedUser->id,
+                            'start_at'     => $startAt,
+                            'due_date'     => $dueDate,
+                            'difficulty'   => $difficultyKey,
+                            //'points' => rand(1,6),
+                            'points'       => $points,
                             'status' => ['todo','in_progress','completed'][array_rand(['todo','in_progress','completed'])],
+
+                            'priority'     => rand(1, 5), // 1 = urgent, 5 = très basse
+                            //'pinned'       => rand(0, 10) === 0, // 10% de chance d'être épinglée
+                            //'pinned_at'    => null, // géré automatiquement par observer ou mutator si tu en as un
+                            //'reminder_at'  => rand(0, 1) ? $dueDate?->subDays(rand(1, 3)) : null,
+                            'notes'        => rand(0, 2) ? 'Note importante : vérifier avec le client avant validation.' : null,
+                            //'attachments_count' => rand(0, 4),
+                           //'comments_count'    => rand(0, 8),
+
                         ]);
 
                         // 2 à 4 sous-tâches
+
                         for ($s = 1; $s <= rand(2,4); $s++) {
                             Subtask::create([
                                 'task_id' => $task->id,
                                 'title' => "Subtask {$s} de {$task->title}",
                                 'status' => ['pending','in_progress','completed'][array_rand(['pending','in_progress','completed'])],
-                                'assigned_to' => rand(0,1) ? collect(array_merge([$leader], $members))->random()->id : null,
+                                'assigned_to' => rand(0, 1) ? collect([$leader, ...$selectedMembers])->random()->id : null,
                                 'priority' => rand(1,5),
                                 'due_date' => rand(0,1) ? now()->addDays(rand(1,7)) : null,
+
+                                'order_pos'        => $s * 10, // espacement pour drag & drop futur
+                                'points'           => rand(1, 5),
+                                'notes'            => rand(0, 3) ? fake()->paragraph(1) : null,
+                                //'estimated_hours'  => rand(1, 8),
+                                //'actual_hours'     => rand(0, 10),
+                                'started_at'       => rand(0, 1) ? now()->subDays(rand(1, 5)) : null,
+                                'completed_at'     => null, // sera rempli par trigger ou observer si status = completed
                             ]);
                         }
                     }
 
                     // Posts par projet / équipe
-                    $teamUsers = $team->members()->get();
+                    // 3 posts par équipe (liés à l'équipe, pas au projet directement)
+                    $teamUsers = $team->members()->get()->push($leader); // inclut le leader
                     for ($postNum = 1; $postNum <= 3; $postNum++) {
-                        $post = Post::create([
+
+                         $post = Post::create([
                             'team_id' => $team->id,
                             'user_id' => $teamUsers->random()->id,
                             'title' => "Post {$postNum} - {$team->name}",
-                            'content' => "Contenu du post {$postNum} pour {$team->name}",
-                            'excerpt' => Str::limit("Contenu du post {$postNum}",50),
+                            'content' => "This is the content of post {$postNum} in {$team->name}. Discussing progress and ideas.",
+                            'excerpt' => Str::limit("This is the content of post {$postNum} in {$team->name}", 50),
                             'visibility' => 'team',
                             'pinned' => rand(0,1),
                             'views_count' => rand(0,100),
                         ]);
 
-                        // Commentaires
+                        // Commentaires // 1 à 3 commentaires par post
                         for ($c = 1; $c <= rand(1,3); $c++) {
                             PostComment::create([
                                 'post_id' => $post->id,
                                 'user_id' => $teamUsers->random()->id,
-                                'content' => "Commentaire {$c} sur {$post->title}",
+                                'content' => "Comment {$c} on {$post->title}",
                             ]);
                         }
 
                         // Likes
-                        foreach ($teamUsers->random(rand(1,$teamUsers->count())) as $user) {
+                        $likers = $teamUsers->random(rand(1, $teamUsers->count()));
+                        foreach ($likers as $user) {
                             PostLike::create([
                                 'post_id' => $post->id,
                                 'user_id' => $user->id,
@@ -183,19 +223,18 @@ class LeaderTestSeeder extends Seeder
             for ($n=1; $n<=rand(3,6); $n++) {
                 Notification::create([
                     'user_id' => $user->id,
-                    'from_id' => $allUsers->random()->id,
-                    'title' => 'Notification TeamLinks',
-                    'message' => "Vous avez une nouvelle action à faire sur TeamLinks.",
+                    'from_id' => $allUsers->where('id', '!=', $user->id)->random()->id,
+                    'title' => 'Notification TeamLinks:TeamLinks Update',
+                    'message' => 'You have a new activity: task assignment, comment, or mention.',
                     'type' => $types[array_rand($types)],
                     //'read_at' => rand(0,1) ? now() : null,
+                    // 'read_at' => rand(0, 3) === 0 ? now() : null, // 25% lues
                 ]);
             }
         }
 
         $this->command->info("Seeder complet exécuté avec succès : utilisateurs, équipes, projets, tâches, sous-tâches, posts, commentaires, likes et notifications !");
 
-
-        $this->command->info("Seeder TeamLinks complet: 5 leaders, 3 équipes par leader, 3 projets par équipe, 6 membres.");
-
+        $this->command->info('Created: 5 leaders | 15 teams | 45 projects | 225 tasks | ~800 subtasks | posts, comments, likes, notifications.');
     }
 }

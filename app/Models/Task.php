@@ -12,13 +12,19 @@ class Task extends Model
         'project_id',
         'title',
         'description',
+        'notes',
         'start_at',
         'due_date',
         'assigned_to',
         'status',
         'difficulty',
         'points',
+        'priority',
         'pinned',
+        'reminder_at',
+        'notes',
+        'attachments_count',
+        'comments_count',
     ];
     //'subtasks', nouveau == 'has_subtasks', //partie json a delete
 
@@ -28,8 +34,11 @@ class Task extends Model
         'due_date'  => 'date:d/m/Y H:i',         // affiche seulement la date
         'start_at'  => 'date:d/m/Y H:i',         // même format pour start_at
         // 'subtasks'  => 'array',  important : Laravel convertit automatiquement JSON ↔ array
+        'priority' => 'integer',
         'pinned' => 'boolean',
         'pinned_at' => 'datetime',
+        'reminder_at' => 'datetime',
+
     ];
 
     //Bonus : Pour afficher aussi l’heure si besoin
@@ -57,6 +66,18 @@ class Task extends Model
 
     }
 
+    // Priority label
+    public function getPriorityLabelAttribute()
+    {
+        return match($this->priority) {
+            1 => 'Urgent',
+            2 => 'High',
+            3 => 'Normal',
+            4 => 'Low',
+            5 => 'Very Low',
+            default => 'Normal'
+        };
+    }
     // Optionnel : scope pour récupérer les tâches épinglées en premier
     public function scopePinnedFirst($query)
     {
@@ -78,4 +99,14 @@ class Task extends Model
         };
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TaskAttachment::class);
+    }
+
+    // Accessor pour le nombre de fichiers (utile dans les vues)
+    public function getAttachmentsCountAttribute(): int
+    {
+        return $this->attachments()->count();
+    }
 }

@@ -9,6 +9,16 @@
                     <h3 class="fw-bold">Create New Team</h3>
                 </div>
                 <div class="card-body p-5">
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form action="{{ route('leader.team.store') }}" method="POST">
                         @csrf
                         <div class="mb-4">

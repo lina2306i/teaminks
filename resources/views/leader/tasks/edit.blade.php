@@ -13,6 +13,16 @@
             </div>
 
             <div class="card-body p-4">
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('leader.tasks.update', $task) }}" method="POST">
                     @csrf
                     @method('PUT')
@@ -114,7 +124,7 @@
 
                                                     <!-- Priority -->
                                                     <div class="col-lg-1 col-md-3">
-                                                        <label class="form-label small text-gray-300 mb-1">Priority</label>
+                                                        <label class="form-label small text-gray-300 mb-1">Priority 1..5 </label>
                                                         <input type="number"
                                                             name="subtasks[{{ $loop->index }}][priority]"
                                                             min="1" max="5"
@@ -122,7 +132,16 @@
                                                             class="form-control bg-gray-600 text-white border-gray-500 text-center"
                                                             placeholder="1-5">
                                                     </div>
-
+                                                    <!-- Points -->
+                                                    <div class="col-lg-3 col-md-3">
+                                                        <label class="form-label small text-gray-300 mb-1">Points 1..5 </label>
+                                                        <input type="number"
+                                                            name="subtasks[{{ $loop->index }}][points]"
+                                                            min="1" max="5"
+                                                            value="{{ is_array($subtask) ? ($subtask['points'] ?? 3) : $subtask->points }}"
+                                                            class="form-control bg-gray-600 text-white border-gray-500 text-center"
+                                                            placeholder="1-5">
+                                                    </div>
                                                     <!-- Due Date -->
                                                     <div class="col-lg-2 col-md-6">
                                                         <label class="form-label small text-gray-300 mb-1">Due Date</label>
@@ -163,6 +182,14 @@
                                         class="form-control bg-gray-700 border-gray-600 text-white">{{ old('description', $task->description) }}</textarea>
                             </div>
 
+                            <!-- Notes -->
+                            <div class="mb-4">
+                                <label for="notes" class="form-label fw-semibold">Notes</label>
+                                <textarea name="notes"
+                                        rows="3"
+                                        class="form-control bg-gray-700 border-gray-600 text-white"
+                                        placeholder="Internal notes...">{{ old('notes', $task->notes ?? '') }}</textarea>
+                            </div>
                             <!-- Assign to -->
                             <div class="mb-4">
                                 <label class="form-label fw-semibold">Assign to</label>
@@ -190,6 +217,18 @@
                                     <option value="completed" {{ $task->status == 'completed' ? 'selected' : '' }}>Completed</option>
                                 </select>
                             </div>
+                             <!-- Pinned -->
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input"
+                                    type="checkbox"
+                                    name="pinned"
+                                    value="1"
+                                    {{ old('pinned', $task->pinned ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-semibold">Pin this task</label>
+                            </div>
+
+                            </div>
+
 
 
                         </div>
@@ -222,6 +261,26 @@
 
                             </div>
 
+                            <!-- Reminder -->
+                            <div class="mt-3">
+                                <label for="reminder_at" class="form-label fw-semibold">Reminder</label>
+                                <input type="datetime-local"
+                                    name="reminder_at"
+                                    id="reminder_at"
+                                    class="form-control bg-gray-700 border-gray-600 text-white"
+                                    value="{{ old('reminder_at', $task->reminder_at ?? '') }}">
+                            </div>
+
+                            <!-- Priority -->
+                            <div class="mt-3">
+                                <label for="priority" class="form-label fw-semibold">Priority 1..5 </label>
+                                <input type="number"
+                                    name="priority"
+                                    min="1" max="5"
+                                    class="form-control bg-gray-700 border-gray-600 text-white"
+                                    value="{{ old('priority', $task->priority ?? 3) }}">
+                            </div>
+
                             <!-- Difficulty -->
                             <div class="mb-4">
                                 <label for="difficulty" class="form-label fw-semibold">Difficulty</label>
@@ -238,7 +297,7 @@
 
                             <!-- Points -->
                             <div class="mb-4">
-                                <label for="points" class="form-label fw-semibold">Points</label>
+                                <label for="points" class="form-label fw-semibold">Points 1..6</label>
                                 @error('points')
                                     <div class="text-danger small mb-2">{{ $message }}</div>
                                 @enderror
@@ -304,11 +363,17 @@ function addSubTask() {
     div.innerHTML = `
         <div class="card-body p-4">
             <div class="row g-3 align-items-end">
-                <div class="  col-md-6">
+                <!-- Title -->
+                <div class="ccol-md-6">
                     <label class="form-label small text-gray-300 mb-1">Title</label>
-                    <input type="text" name="subtasks[${subtaskIndex}][title]" class="form-control bg-gray-600 text-white border-gray-500" placeholder="Sub-task title" required>
+                    <input type="text"
+                        name="subtasks[${subtaskIndex}][title]"
+                        class="form-control bg-gray-600 text-white border-gray-500"
+                        placeholder="Sub-task title"
+                        required>
                 </div>
-                <div class="col-md-5">
+                <!-- Status -->
+                <div class=" col-md-3>
                     <label class="form-label small text-gray-300 mb-1">Status</label>
                     <select name="subtasks[${subtaskIndex}][status]" class="form-select bg-gray-600 text-white border-gray-500">
                         <option value="pending" selected>Pending</option>
@@ -316,25 +381,49 @@ function addSubTask() {
                         <option value="completed">Completed</option>
                     </select>
                 </div>
-                <div class=" col-md-6">
+                <!-- Assigned to -->
+                <div class=" col-md-3">
                     <label class="form-label small text-gray-300 mb-1">Assign to</label>
                     <select name="subtasks[${subtaskIndex}][assigned_to]" class="form-select bg-gray-600 text-white border-gray-500">
                         <option value="">Not assigned</option>
                         @foreach($teamMembers as $member)
-                            <option value="{{ $member->id }}">{{ $member->name }}</option>
+                            <option value="{{ $member->id }}"
+                                {{ $member->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
-                <div class=" col-md-5">
-                    <label class="form-label small text-gray-300 mb-1">Priority</label>
-                    <input type="number" name="subtasks[${subtaskIndex}][priority]" min="1" max="5" value="3" class="form-control bg-gray-600 text-white border-gray-500 text-center">
+                <!-- Priority -->
+                <div class=" col-md-2">
+                    <label class="form-label small text-gray-300 mb-1">Priority 5..1 </label>
+                    <input type="number"
+                        name="subtasks[${subtaskIndex}][priority]"
+                        min="1" max="5" value ="3"
+                        class="form-control bg-gray-600 text-white border-gray-500 text-center"
+                        placeholder="1-5">
                 </div>
-                <div class=" col-md-6">
+                <!-- Points -->
+                <div class="col-md-2">
+                    <label class="form-label small text-gray-300 mb-1">Points 1..5 </label>
+                    <input type="number"
+                        name="subtasks[${subtaskIndex}][points]"
+                        min="1" max="5" value ="3"
+                        class="form-control bg-gray-600 text-white border-gray-500 text-center"
+                        placeholder="1-5">
+                </div>
+                <!-- Due Date -->
+                <div class="col-md-4">
                     <label class="form-label small text-gray-300 mb-1">Due Date</label>
-                    <input type="datetime-local" name="subtasks[${subtaskIndex}][due_date]" class="form-control bg-gray-600 text-white border-gray-500">
+                    <input type="datetime-local"
+                        name="subtasks[${subtaskIndex}][due_date]"
+                        class="form-control bg-gray-600 text-white border-gray-500">
                 </div>
-                <div class="col-md-2 text-end">
-                    <button type="button" class="btn btn-outline-danger btn-sm rounded-circle shadow-sm" onclick="removeSubTask(this)">
+                <!-- Delete Button -->
+                <div class=" col-md-1 text-end">
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm rounded-circle shadow-sm"
+                            onclick="removeSubTask(this)"
+                            title="Remove sub-task">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>

@@ -1,0 +1,448 @@
+<form method="GET" class="d-flex gap-2">
+                <input type="text" name="search" placeholder="Search projects"
+                    value="{{ request('search') }}"
+                    class="form-control bg-gray-700 text-white border-gray-600">
+                <select name="status" class="form-select bg-gray-700 text-white border-gray-600">
+                    <option value="">All Status</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                </select>
+                <select name="sort" class="form-select bg-gray-700 text-white border-gray-600">
+                    <option value="">Sort by</option>
+                    <option value="progress" {{ request('sort') == 'progress' ? 'selected' : '' }}>Progress</option>
+                    <option value="deadline" {{ request('sort') == 'deadline' ? 'selected' : '' }}>Deadline</option>
+                    <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Name</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </form>
+
+    /// option 1  par chat
+   /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        // Tous les projets où l'utilisateur est impliqué
+        $query = Project::query();
+         //  Projets dont l'utilisateur est leader (via leader_id)
+        $ownedProjects = Project::where('leader_id', $user->id) ;
+
+        $ownedProjects = Project::where(function ($query) use ($user) {
+            // Projets où l'utilisateur est leader
+            $query->where('leader_id', $user->id)
+                // OU projets où il est membre via équipe
+                ->orWhereHas('team', function ($q) use ($user) {
+                    $q->whereHas('members', function ($q2) use ($user) {
+                        $q2->where('user_id', $user->id)
+                           ->where('status', 'accepted');
+                    });
+                });
+        }) ;
+        // Union des deux + tri + eager loading
+        $projectsQuery = $ownedProjects
+            // ->union($teamProjects)
+            ->with(['team.members', 'leader' , 'tasks.subtasks'])           // relations utiles
+            ->withCount('tasks')  ;               // nombre de tâches
+        // Recherche
+        if ($request->filled('search')) {
+            $projectsQuery->where('name', 'like', '%'.$request->search.'%');
+        }
+        // Filtre statut
+        if ($request->filled('status')) {
+            $projectsQuery->status($request->status);
+        }
+        // Tri
+        if ($request->filled('sort')) {
+            if ($request->sort === 'progress') {
+                // tri custom basé sur un champ calculé
+                $projects = $projectsQuery->get()->sortByDesc(fn($p) => $p->progress);
+                // Pagination manuelle
+                $page = $request->page ?? 1;
+                $perPage = 6;
+
+                 $projects = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $projects->forPage($page ?? 1, $perPage),
+                    $projects->count(),
+                    $perPage,
+                    $page ,
+                    ['path' => $request->url(), 'query' => $request->query()]
+                );
+            } elseif ($request->sort === 'deadline') {
+               $projects =  $projectsQuery->orderBy('end_date', 'asc')
+                                      ->paginate(6)
+                                      ->appends($request->query());
+            } elseif ($request->sort === 'name') {
+               $projects =  $projectsQuery->orderBy('name', 'asc')
+                                      ->paginate(6)
+                                      ->appends($request->query());
+            }
+        } else {
+            // Tri par date de création par défaut
+            $projects = $projectsQuery->latest()->paginate(6)->appends($request->query());
+        }
+        return view('leader.projects.index', compact('projects'));
+    }
+
+    //option 2 marche   par chat
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+
+        // Base query : projets où l'utilisateur est leader ou membre
+        $projectsQuery = Project::where(function ($query) use ($user) {
+            $query->where('leader_id', $user->id)
+                ->orWhereHas('team.members', function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                        ->where('status', 'accepted');
+                });
+        })
+        ->with(['team.members', 'leader', 'tasks.subtasks'])
+        ->withCount('tasks');
+
+        // Recherche par nom
+        if ($request->filled('search')) {
+            $projectsQuery->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Filtre par statut (on récupère en PHP si c'est un champ calculé)
+        if ($request->filled('status')) {
+            if (in_array($request->status, ['active', 'completed', 'overdue'])) {
+                // on récupère les projets pour les filtrer après récupération
+                $projects = $projectsQuery->get()->filter(function ($project) use ($request) {
+                    return match($request->status) {
+                        'active'    => $project->start_date <= now() && $project->end_date >= now(),
+                        'completed' => $project->progress == 100,
+                        'overdue'   => $project->end_date < now() && $project->progress < 100,
+                    };
+                });
+            }
+        } else {
+            $projects = $projectsQuery->get();
+        }
+
+        // Tri
+        if ($request->filled('sort')) {
+            $projects = match($request->sort) {
+                'progress' => $projects->sortByDesc(fn($p) => $p->progress),
+                'deadline' => $projects->sortBy(fn($p) => $p->end_date),
+                'name'     => $projects->sortBy(fn($p) => $p->name),
+                default    => $projects->sortByDesc(fn($p) => $p->created_at),
+            };
+        } else {
+            $projects = $projects->sortByDesc(fn($p) => $p->created_at);
+        }
+
+        // Pagination manuelle pour collection filtrée
+        $page = $request->page ?? 1;
+        $perPage = 6;
+        $paginatedProjects = new \Illuminate\Pagination\LengthAwarePaginator(
+            $projects->forPage($page, $perPage),
+            $projects->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('leader.projects.index', ['projects' => $paginatedProjects]);
+    }
+
+    // option 3 par grok mais trie par progress error bugé
+    public function index(Request $request)
+    {
+        $query = Auth::user()->projects()->with(['team.members'])->withCount('tasks');
+
+        // Recherche par nom
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Filtre par statut
+        if ($request->filled('status')) {
+            $now = now();
+            match ($request->status) {
+                'active' => $query->where(function ($q) use ($now) {
+                    $q->whereNull('end_date')
+                    ->orWhere('end_date', '>', $now);
+                })->whereRaw('(SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id AND tasks.status != "completed") > 0'), // au moins une tâche non terminée
+
+                'completed' => $query->whereRaw('(SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id AND tasks.status = "completed") = (SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id)'), // toutes les tâches completed
+
+                'overdue' => $query->where('end_date', '<', $now)->whereRaw('(SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id AND tasks.status != "completed") > 0'),
+            };
+        }
+
+        // Tri
+        $sort = $request->get('sort', 'created_at'); // default
+        $direction = $request->get('direction', 'desc');
+
+        match ($sort) {
+            'name' => $query->orderBy('name', $direction),
+            'progress' => $query->orderBy('progress', $direction === 'desc' ? 'desc' : 'asc'), // progress est un accessor
+            'deadline' => $query->orderBy('end_date', $direction === 'asc' ? 'asc' : 'desc'), // nulls last ?
+            'created_at' => $query->orderBy('created_at', $direction),
+            default => $query->latest(),
+        };
+
+        $projects = $query->paginate(12)->withQueryString(); // garde les params dans les liens pagination
+
+        return view('leader.projects.index', compact('projects'));
+    }
+
+
+-----------------------------------------------------
+//pas de filter function in l.p.Controller
+
+<?php
+
+namespace App\Http\Controllers\Leader;
+
+use App\Http\Controllers\Controller;
+use App\Models\Project;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class LeaderProjectController extends Controller
+{
+    /*
+    $user = Auth::user();
+
+    // Projets dont je suis le leader
+    $user->ownedProjects;
+
+    // Projets dont je suis membre (pas forcément leader)
+    $user->projects;
+
+    // Toutes les tâches qui me sont assignées
+    $user->assignedTasks;
+
+    */
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+
+        $user = Auth::user();
+        // Tous les projets où l'utilisateur est impliqué
+
+        //$projects = Auth::user()->projects()->withCount('tasks')->latest()->get();
+        //$projects = $user->ownedProjects->merge($user->projects)->unique()->sortByDesc('created_at');
+        //$projects = Auth::user()->projects()->withCount(['tasks', 'members'])->latest()->get();
+        /*$projects =$user
+            ->projects()    // tous les projets où il est membre
+            ->withCount('tasks')
+            //->with('team')      // pour afficher le nom de l'équipe si besoin
+            ->with(['team', 'tasks'])
+            ->orWhere('leader_id', Auth::id()) // + ceux dont il est leader
+            ->sortByDesc('created_at')
+            ->latest()->get();
+            //version ultra-simple et sans erreur
+            ->projects()                    // relation hasMany : projets où il est leader_id
+            ->with('team')                  // pour afficher le nom de l'équipe
+            ->withCount('tasks')            // compteur de tâches
+            ->latest()                      // tri par created_at desc
+            ->get();
+        */
+        //corr to
+        $query = Project::query();
+
+         // 1. Projets dont l'utilisateur est leader (via leader_id)
+        $ownedProjects = Project::where('leader_id', $user->id) ;
+                //->withCount('tasks') ;
+
+
+        // 2. Projets dont l'utilisateur est membre via l'équipe liée au projet
+        $teamProjects = Project::whereHas('team', function ($q) use ($user) {
+            $q->whereHas('members', function ($q2) use ($user) {
+                $q2->where('user_id', $user->id)
+                    ->where('status', 'accepted'); // si tu as un champ status
+            });
+        })->withCount('tasks');
+        // ou bieb les 2 enbles
+        $ownedProjects = Project::where(function ($query) use ($user) {
+            // Projets où l'utilisateur est leader
+            $query->where('leader_id', $user->id)
+                // OU projets où il est membre via équipe
+                ->orWhereHas('team', function ($q) use ($user) {
+                    $q->whereHas('members', function ($q2) use ($user) {
+                        $q2->where('user_id', $user->id)
+                           ->where('status', 'accepted');
+                    });
+                });
+        }) ;
+        // Union des deux + tri + eager loading
+        $projectsQuery = $ownedProjects
+            // ->union($teamProjects)
+            ->with(['team.members', 'leader' , 'tasks.subtasks'])           // relations utiles
+            ->withCount('tasks')                 // nombre de tâches
+            //->orderBy('created_at', 'desc')      // tri correct au niveau DB
+           ;//->latest()->distinct() ; //->get() ;
+        // Si tu veux éviter les doublons (au cas où un leader est aussi membre de sa propre team)
+        // $projects = $projectsQuery->paginate(6); // Optional: pagination instead of get();
+
+        $projects = $projectsQuery->paginate(6)->appends($request->query());
+
+
+
+
+        return view('leader.projects.index', compact('projects'));
+    }
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $teams = auth()->user()->teamsAsLeader; // tes équipes où tu es leader
+        return view('leader.projects.create', compact('teams'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'due_date' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'team_id' => 'nullable|exists:teams,id',
+        ]);
+        $validated['leader_id'] = Auth::id();
+        $project = Project::create($validated);
+
+        //oub1
+        //Auth::user()->projects()->create($validated);
+        //$project = Auth::user()->projects()->create($validated);
+
+        return redirect()->route('leader.projects.index')->with('success', 'Project created successfully.');
+    }
+
+    /**
+     * Display the specified resource.
+    */
+    //public function show(string $id)
+    public function show(Project $project)
+    {
+        // Autorisation : leader OU membre du projet (via team)
+        // $this->authorizeProject($project);
+        if ($project->leader_id !== Auth::id() && (! $project->team || ! $project->team->members->contains(Auth::id()))){
+           // !$project->users->contains(Auth::id())) {
+            abort(403);
+        }
+
+        // Charge tout ce qu’on affiche dans la vue show
+        //$project->load('tasks.assignedTo');
+        // Charge uniquement les relations valides //→ enlève 'members' et 'team.users' du load()
+        $project->load([
+            'tasks.assignedTo', // tâche + personne assignée
+            'tasks.subtasks', // si tu veux voir les subtasks aussi
+            //'members' ,// <-- nouveau // ← PROBLÈME ICI so we do //Supprime 'members' du load() et utilise directement la team
+            'team.members',          // membres de l'équipe liée // ← c'est suffisant !
+            //'team.users',
+        ]);
+
+        return view('leader.projects.show', compact('project'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+    */
+    //public function edit(string $id)
+    public function edit(Project $project)
+    {
+        $this->authorizeProject($project);
+        /*if ($project->leader_id !== Auth::id()) {
+            abort(403);
+        }*/
+        $teams = auth()->user()->teamsAsLeader;
+
+        return view('leader.projects.edit', compact('project', 'teams'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    //public function update(Request $request, string $id)
+    public function update(Request $request, Project $project)
+    {
+        $this->authorizeProject($project);
+        /*if ($project->leader_id !== Auth::id()) {
+            abort(403);
+        }*/
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'due_date' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'team_id' => 'nullable|exists:teams,id',
+        ]);
+
+
+        $project->update($validated);
+        // redirction vers aussi index as i like
+        return redirect()->route('leader.projects.show', $project)->with('success', 'Project updated.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    //public function destroy(string $id)
+    public function destroy(Project $project)
+    {
+        $this->authorizeProject($project);
+        /*if ($project->leader_id !== Auth::id()) {
+            abort(403);
+        }*/
+        $project->delete();
+        return back()->with('success', 'Projet deleted');
+        // return redirect()->route('leader.projects.index')->with('success', 'Projet supprimé.');
+    }
+
+    // Calendrier visuel des deadlines (FullCalendar) ::  FullCalendar (via CDN, pas de build lourd)
+    public function calendar()
+    {
+        // On charge les projets du leader connecté avec les relations nécessaires
+        $projects = auth()->user()
+            ->ledProjects() // ou Project::where('leader_id', auth()->id())
+            ->with('team')
+            ->get()
+            ->map(function ($project) {
+                return [
+                    'title' => $project->name,
+                    //'title' => $project->title . ' (' . $project->progress . '%)',
+                    'start' => optional($project->start_date)->format('Y-m-d'),
+                    'end'   => optional($project->end_date)?->addDay()->format('Y-m-d'),
+                    'url'   => route('leader.projects.show', $project),
+                    'color' => $project->is_overdue
+                        ? '#f43649ff'
+                        : ($project->progress == 100 ? '#87e09cff' : '#8fbdedff'),
+                    'team'  => $project->team?->name ?? 'No team',
+                    'progress' => $project->progress,
+                ];
+            });
+             // ->projects()->with('team')->get();
+
+        return view('leader.projects.calendar', compact('projects'));
+    }
+    // Helper to authorize project actions
+    private function authorizeProject(Project $project)
+    {
+        if ($project->leader_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+    }
+
+
+
+}

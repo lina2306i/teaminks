@@ -364,7 +364,34 @@
                             </div>
                         </div>
 
-
+                        @if($task->attachments_count > 0)
+                            <div class="card bg-gray-800 text-white border-0 shadow mt-4">
+                                <div class="card-header bg-dark fw-bold">
+                                    <i class="fas fa-paperclip me-2"></i> Attachments ({{ $task->attachments_count }})
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        @foreach($task->attachments as $attachment)
+                                            <div class="col-md-6 col-lg-4">
+                                                <div class="d-flex align-items-center bg-gray-700 p-3 rounded">
+                                                    <i class="fas fa-file me-3 text-primary fa-2x"></i>
+                                                    <div class="flex-grow-1">
+                                                        <div class="fw-bold small">{{ $attachment->filename }}</div>
+                                                        <small class="text-gray-400">
+                                                            {{ round($attachment->size / 1024, 1) }} KB
+                                                            • {{ $attachment->created_at->format('d/m/Y H:i') }}
+                                                        </small>
+                                                    </div>
+                                                    <a href="{{ $attachment->url }}" target="_blank" class="btn btn-sm btn-outline-info ms-2">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                         <br>
                         <!-- Boutons en bas (répétés pour mobile) -->
                         <div class="d-flex flex-column d-md-none gap-3 mt-5">

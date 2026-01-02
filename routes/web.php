@@ -135,28 +135,49 @@ Route::middleware(['auth', 'role:leader'])
 
         // ==================== PEOJECTS ====================
         // Projets
-        Route::resource('projects', LeaderProjectController::class)->except(['show']);
-        Route::get('projects/{project}', [LeaderProjectController::class, 'show'])->name('projects.show');
-        Route::resource('projects', LeaderProjectController::class);
+        // Route personnalisée d'abord !
+            //Créer la route + controller method for the  Calendrier visuel des deadlines (FullCalendar)
+        Route::get('projects/calendar', [LeaderProjectController::class, 'calendar'])
+            ->name('projects.calendar');
+       // Route::resource('projects', LeaderProjectController::class)->except(['show']);
+        //Route::get('projects/{project}', [LeaderProjectController::class, 'show'])->name('projects.show');
+       // Ensuite le resource (qui capture {project})
+        Route::resource('projects', LeaderProjectController::class)
+            ->parameters(['projects' => 'project'])
+            ->names([
+                'index'   => 'projects.index',
+                'create'  => 'projects.create',
+                'store'   => 'projects.store',
+                'show'    => 'projects.show',
+                'edit'    => 'projects.edit',
+                'update'  => 'projects.update',
+                'destroy' => 'projects.destroy',
+            ]);
+
+
 
         // ==================== TASKS ====================
         // Tâches
-        Route::resource('tasks', LeaderTaskController::class)->except(['show']);
-        Route::get('tasks/{task}', [LeaderTaskController::class, 'show'])->name('tasks.show');
-
-        Route::resource('tasks', LeaderTaskController::class)->names([
-            'index' => 'tasks.index',
-            'create' => 'tasks.create',
-            'store' => 'tasks.store',
-            'show' => 'tasks.show',
-            'edit' => 'tasks.edit',
-            'update' => 'tasks.update',
-            'destroy' => 'tasks.destroy',
-        ]);
-        Route::post('tasks/{task}/pin', [LeaderTaskController::class, 'pin'])->name('tasks.pin');
+      //  Route::resource('tasks', LeaderTaskController::class)->except(['show']);
+      //  Route::get('tasks/{task}', [LeaderTaskController::class, 'show'])->name('tasks.show');
 
         Route::resource('tasks', LeaderTaskController::class)
-            ->only(['index', 'create', 'store', 'show']);
+            ->names([
+                'index' => 'tasks.index',
+                'create' => 'tasks.create',
+                'store' => 'tasks.store',
+                'show' => 'tasks.show',
+                'edit' => 'tasks.edit',
+                'update' => 'tasks.update',
+                'destroy' => 'tasks.destroy',
+            ]);
+        Route::post('tasks/{task}/pin', [LeaderTaskController::class, 'pin'])->name('tasks.pin');
+
+    //    Route::resource('tasks', LeaderTaskController::class)
+      //      ->only(['index', 'create', 'store', 'show']);
+
+        Route::post('tasks/{task}/upload-attachment', [LeaderTaskController::class, 'uploadAttachment'])
+              ->name('tasks.upload-attachment');
 
         // ==================== POSTS ====================
         // Liste des posts + pagination
