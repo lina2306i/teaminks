@@ -261,8 +261,12 @@ class LeaderProjectController extends Controller
                     'id'         => 'project-' . $project->id,
                     'title' => $project->name,
                     //'title' => $project->title . ' (' . $project->progress . '%)',
-                    'start' => optional($project->start_date)->format('Y-m-d'),
-                    'end'   => optional($project->end_date)?->addDay()->format('Y-m-d'),
+                    'start' => $project->start_date ? Carbon::parse($project->start_date)->format('Y-m-d') : null,
+                    // optional($project->start_date)->format('Y-m-d'),
+                    'end'   =>$project->end_date
+                                ? Carbon::parse($project->end_date)->addDay()->format('Y-m-d')
+                                : ($project->start_date ? Carbon::parse($project->start_date)->addDay()->format('Y-m-d') : null),
+                    // optional($project->end_date)?->addDay()->format('Y-m-d'),
                     'url'   => route('leader.projects.show', $project),
                     'color' => $project->is_overdue
                         ? '#f43649ff'
@@ -295,13 +299,13 @@ class LeaderProjectController extends Controller
             ->with(['project', 'assignedTo'])
             ->get()
             ->map(function ($task) {
-                $isOverdue = $task->due_date && Carbon::parse($task->due_date)->isPast() && $task->status !== 'completed';
+                $isOverdue = $task->end_date && Carbon::parse($task->due_date)->isPast() && $task->status !== 'completed';
 
                 return [
                     'id'         => 'task-' . $task->id,
                     'title'      => '📌 ' . $task->title,
-                    'start'      => $task->due_date,
-                    'end'        => $task->due_date,
+                    'start'      => $task->start_at,
+                    'end'        => $task->end_date,
                     'url'        => route('leader.tasks.show', $task),
                     'backgroundColor' => $isOverdue ? '#e94b5bff' : ($task->status === 'completed' ? '#28a745' : '#ffc107'),
                     'borderColor'     => $isOverdue ? '#dc3545' : ($task->status === 'completed' ? '#28a745' : '#ffc107'),
@@ -321,7 +325,7 @@ class LeaderProjectController extends Controller
         $events = $projects->merge(items: $tasksEvents)->toArray();
         //$events = $projectsEvents->merge($tasksEvents)->values()->toJson();
 
-        return view('leader.projects.calendar', compact('events'));
+        return view('leader.calendar.calendarProject', compact('events'));
 
 
     }

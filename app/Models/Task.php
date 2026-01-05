@@ -38,6 +38,8 @@ class Task extends Model
         'pinned' => 'boolean',
         'pinned_at' => 'datetime',
         'reminder_at' => 'datetime',
+        'attachments_count' => 'integer',
+        'comments_count' => 'integer',
 
     ];
 

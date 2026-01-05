@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "laravel/ui": "^4.6",
+        "rahulhaque/laravel-filepond": "12.0",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.23"
     },
@@ -32,7 +33,8 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Helpers/helpers.php"
+            "app/Helpers/helpers.php",
+            "app/Helpers/FileHelper.php"
         ]
     },
     "autoload-dev": {

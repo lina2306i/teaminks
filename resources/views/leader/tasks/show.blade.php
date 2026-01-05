@@ -364,35 +364,111 @@
                             </div>
                         </div>
 
-                        @if($task->attachments_count > 0)
-                            <div class="card bg-gray-800 text-white border-0 shadow mt-4">
-                                <div class="card-header bg-dark fw-bold">
-                                    <i class="fas fa-paperclip me-2"></i> Attachments ({{ $task->attachments_count }})
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
+                        @php
+                            // Fonctions helper (si pas déjà définies ailleurs)
+                            if (!function_exists('getFileIconHelper')) {
+                                function getFileIconHelper($mimeType) {
+                                    if (str_starts_with($mimeType, 'image/')) return 'fas fa-image';
+                                    if (str_contains($mimeType, 'pdf')) return 'fas fa-file-pdf';
+                                    if (str_contains($mimeType, 'word')) return 'fas fa-file-word';
+                                    if (str_contains($mimeType, 'excel') || str_contains($mimeType, 'spreadsheet')) return 'fas fa-file-excel';
+                                    if (str_contains($mimeType, 'zip')) return 'fas fa-file-archive';
+                                    if (str_contains($mimeType, 'video')) return 'fas fa-file-video';
+                                    return 'fas fa-file';
+                                }
+                            }
+
+                            if (!function_exists('formatBytesHelper')) {
+                                function formatBytesHelper($bytes, $precision = 2) {
+                                    $units = ['B', 'KB', 'MB', 'GB'];
+                                    $bytes = max($bytes, 0);
+                                    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+                                    $pow = min($pow, count($units) - 1);
+                                    $bytes /= pow(1024, $pow);
+                                    return round($bytes, $precision) . ' ' . $units[$pow];
+                                }
+                            }
+                        @endphp
+                        <!-- Attachement  @ if($task->attachments_count > 0) -->
+                        <h3 class="h5 mb-4 text-primary"><i class="fas fa-paperclip me-2"></i>Attachments — (Max 5 files)</h3>
+                        {{-- ✅ SECTION FICHIERS AVEC BOUTON EDIT --}}
+                        <div class="card shadow mb-4">
+                            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-file-export me-2"></i> Attachment(s)
+                                    <span class="badge bg-light text-dark">{{ $task->attachments->count() }}</span>
+                                </h5>
+
+                                {{-- ✅ BOUTON EDIT FILES --}}
+                                <button type="button"   class="btn btn-light btn-sm"   data-bs-toggle="modal"  data-bs-target="#editFilesModal">
+                                     Files Manager <i class="fas fa-edit me-1"></i>
+                                </button>
+                            </div>
+
+                            <div class="card-body">
+                                @if($task->attachments->count() > 0)
+                                    <div class="list-group">
                                         @foreach($task->attachments as $attachment)
-                                            <div class="col-md-6 col-lg-4">
-                                                <div class="d-flex align-items-center bg-gray-700 p-3 rounded">
-                                                    <i class="fas fa-file me-3 text-primary fa-2x"></i>
-                                                    <div class="flex-grow-1">
-                                                        <div class="fw-bold small">{{ $attachment->filename }}</div>
-                                                        <small class="text-gray-400">
-                                                            {{ round($attachment->size / 1024, 1) }} KB
-                                                            • {{ $attachment->created_at->format('d/m/Y H:i') }}
-                                                        </small>
-                                                    </div>
-                                                    <a href="{{ $attachment->url }}" target="_blank" class="btn btn-sm btn-outline-info ms-2">
-                                                        <i class="fas fa-download"></i>
+                                        <div class="list-group-item  d-flex justify-content-between align-items-center">
+                                            <div class="d-flex align-items-center">
+                                                <i class="{{ getFileIconHelper($attachment->mime_type) }} fa-2x text-primary me-3"></i>
+                                                <div>
+                                                    <a href="{{ asset('storage/' . $attachment->path) }}"
+                                                    target="_blank"
+                                                    class="fw-bold text-decoration-none">
+                                                        {{ $attachment->filename }}
                                                     </a>
+                                                   <span class="text-xs text-gray-400">({{ $attachment->uploader->name ?? 'Unknown' }}) </span>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Added on {{ $attachment->created_at->format('d/m/Y à H:i') }}
+                                                        • Uploaded {{ $attachment->created_at->diffForHumans() }}
+                                                    </small>
+                                                    <small class="text-gray-400 ">
+                                                        _ {{ formatBytesHelper($attachment->size) }}
+                                                        {{-- number_format($attachment->size / 1024, 2) KB--}}
+                                                    </small>
                                                 </div>
                                             </div>
+                                            <a href="{{ asset('storage/' . $attachment->path) }}"
+                                                download="{{ $attachment->filename }}"
+                                                class="btn btn-sm btn-outline-primary">
+                                                     <i class="fas fa-download"></i>
+                                            </a>
+                                        </div>
                                         @endforeach
                                     </div>
-                                </div>
+                                @else
+                                    <div class="text-center py-4 text-muted">
+                                        <i class="fas fa-folder-open fa-3x mb-3"></i>
+                                        <p>No attachments yet.</p>
+                                        <button type="button"
+                                                class="btn btn-primary btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editFilesModal">
+                                            <i class="fas fa-plus me-1"></i>Add File(s)
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
-                        @endif
-                        <br>
+                            <hr>
+                            <h5 class="mb-0 p-3 font-semibold">
+                                <i class="fas fa-solid fa-eye  me-2"></i> Seen Attachments
+                            </h5>
+                            <ul class="mt-6 space-y-2">
+                                @foreach($task->attachments as $file)
+                                    <li class="flex items-center gap-2">
+                                        📎
+                                        <a href="{{ Storage::url($file->path) }}" target="_blank"  class="text-blue-600 hover:underline">
+                                            {{ $file->filename }}
+                                        </a>
+                                        <span class="text-xs text-gray-500">({{ $file->uploader->name ?? 'Unknown' }}) </span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+
+
                         <!-- Boutons en bas (répétés pour mobile) -->
                         <div class="d-flex flex-column d-md-none gap-3 mt-5">
                             <a href="{{ route('leader.tasks.edit', $task) }}" class="btn btn-warning">Edit Task</a>
@@ -401,6 +477,12 @@
                                 <button type="submit" class="btn {{ $task->pinned ? 'btn-primary' : 'btn-outline-primary' }}">
                                     <i class="fas fa-thumbtack me-2"></i>
                                     {{ $task->pinned ? 'Unpin' : 'Pin to top' }}
+                                </button>
+                                <button type="button"
+                                        class="btn btn-secondary w-100 mb-2"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editFilesModal">
+                                    <i class="fas fa-paperclip me-2"></i> files Manager
                                 </button>
                             </form>
                             <form action="{{ route('leader.tasks.destroy', $task) }}" method="POST">
@@ -414,6 +496,50 @@
             </div>
         </div>
     </div>
+
+    {{-- ✅ MODAL POUR ÉDITER LES FICHIERS --}}
+    <div class="modal fade" id="editFilesModal" tabindex="-1" aria-labelledby="editFilesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form action="{{ route('leader.tasks.update', $task) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+
+                    {{-- Champs cachés pour garder les valeurs actuelles --}}
+                    <input type="hidden" name="project_id" value="{{ $task->project_id }}">
+                    <input type="hidden" name="title" value="{{ $task->title }}">
+                    <input type="hidden" name="description" value="{{ $task->description }}">
+                    <input type="hidden" name="status" value="{{ $task->status }}">
+                    <input type="hidden" name="difficulty" value="{{ $task->difficulty }}">
+                    <input type="hidden" name="points" value="{{ $task->points }}">
+                    <input type="hidden" name="priority" value="{{ $task->priority }}">
+                    <input type="hidden" name="assigned_to" value="{{ $task->assigned_to }}">
+
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="editFilesModalLabel">
+                            <i class="fas fa-paperclip me-2"></i> Files Manager
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        {{-- ✅ INCLUSION DU COMPOSANT --}}
+                        @include('leader.tasks.editFile', ['task' => $task])
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Close
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save updates
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 
@@ -449,3 +575,4 @@
         }
     </style>
 @endpush
+

@@ -66,6 +66,17 @@
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
     ),
   ),
+  'rahulhaque/laravel-filepond' => 
+  array (
+    'aliases' => 
+    array (
+      'Filepond' => 'RahulHaque\\Filepond\\Facades\\Filepond',
+    ),
+    'providers' => 
+    array (
+      0 => 'RahulHaque\\Filepond\\FilepondServiceProvider',
+    ),
+  ),
   'spatie/laravel-activitylog' => 
   array (
     'providers' => 

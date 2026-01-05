@@ -24,8 +24,14 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <!-- FullCalendar (via CDN, pas de build lourd @ 6.1.15)    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
--->
-    <!-- Styles CSS personnalisés -->
+    -->
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!--     @ filepondStyles
+   <link rel="stylesheet" href="https://unpkg.com/dropzone@6/dist/dropzone.css">
+    Styles CSS personnalisés -->
     <link href="{{ asset('css/styleAppW.css') }}" rel="stylesheet">
     <!-- Posts CSS (seulement si tu veux le garder séparé) -->
     <link rel="stylesheet" href="{{ asset('css/stylePosts.css') }}">
@@ -34,12 +40,12 @@
 
 </head>
 <body class="h-full bg-gray-950 text-white d-flex flex-column">
-        <!-- Navbar  -->
+        <!-- Navbar 2/Pro  -->
         @include('components.navbar2')
 
         <!-- Layout principal : Sidebar + Contenu -->
         <div class="d-flex flex-grow-1">
-            <!-- Sidebar latérale (fixe à gauche)  -->
+            <!-- Sidebar latérale (fixe à gauche) Pro -->
             @include('components.sidebar')
               <!-- Main Content Area -->
             <main class="py-4 flex-grow-1 overflow-auto" style="margin-left: 25vw; min-width: 0;">
@@ -68,16 +74,6 @@
             </button>
         </div>
 
-        @push('scripts')
-
-        @endpush
-
-
-
-   <!--main class="py-4">
-            @ yield(section: 'contentW')
-    </!--main-->
-
     <!-- Footer -->
     <footer id="contact" class="mt-auto py-4 bg-gray-900 border-top border-gray-800">
         <div class="container text-center">
@@ -96,10 +92,15 @@
     <!-- Bootstrap JS + Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
     <!-- script of Calendrier visuel des deadlines :: FullCalendar (via CDN, pas de build lourd) @ 6.1.15    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
--->
+    -->
 
-    @stack('scripts')
+    <script src="https://unpkg.com/dropzone@6/dist/dropzone-min.js"></script>
+
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <script>
         // Scroll fluide quand on clique sur un lien d'ancre
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -115,7 +116,7 @@
             });
         });
     </script>
-    <!-- Script pour le bouton Retour en haut -->
+    <!-- @ filepondScripts Script pour le bouton Retour en haut -->
     <script>
         // Sélection du bouton
         document.addEventListener('DOMContentLoaded', function () {
@@ -142,7 +143,19 @@
             const tooltip = new bootstrap.Tooltip(backToTopButton);
         });
     </script>
+    <script src="https://unpkg.com/filepond/dist/filepond.min.js"></script>
 
+    <!-- Optionnel: File type validation -->
+    <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.js"></script>
+
+    <script src="https://unpkg.com/filepond-plugin-file-encode/dist/filepond-plugin-file-encode.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-exif-orientation/dist/filepond-plugin-image-exif-orientation.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+
+
+    @stack('scripts')
 
 
 </body>

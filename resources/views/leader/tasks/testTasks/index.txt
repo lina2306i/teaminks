@@ -1,3 +1,43 @@
+
+<!-- Filtre par projet + statut -->
+    <div class="text-center mb-5">
+        <div class="d-flex flex-wrap gap-3 justify-content-center ">
+            <!-- All Tasks -->
+            <a href="{{ route('leader.tasks.index') }}"
+            class="px-5 py-2 rounded-full border transition-all {{ request()->filled(['projectId', 'status']) ? 'border-gray-500 text-gray-400 hover:bg-gray-700 hover:text-white' : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg' }}">
+                All Tasks
+            </a>
+
+            <!-- Filtre par Projet -->
+            @foreach($projects as $project)
+                <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['projectId' => $project->id, 'status' => null])) }}"
+                class="px-5 py-2 rounded-full border transition-all {{ request()->query('projectId') == $project->id && !request()->has('status') ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg' : 'border-blue-500 text-blue-400 hover:bg-blue-600 hover:text-white hover:shadow' }}">
+                    {{ $project->name }}
+                </a>
+            @endforeach
+            <!-- Séparateur -->
+            <span class="text-gray-500 align-self-center px-3">|</span>
+
+            <!-- Filtre par Statut -->
+            <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'todo', 'projectId' => null])) }}"
+            class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'todo' ? 'bg-secondary text-white border-transparent shadow-lg' : 'border-gray-500 text-gray-400 hover:bg-secondary hover:text-white' }}">
+                To Do
+            </a>
+
+            <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'in_progress', 'projectId' => null])) }}"
+            class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'in_progress' ? 'bg-warning text-white border-transparent shadow-lg' : 'border-warning text-yellow-400 hover:bg-warning hover:text-white' }}">
+                In Progress
+            </a>
+
+            <a href="{{ route('leader.tasks.index', array_merge(request()->query(), ['status' => 'completed', 'projectId' => null])) }}"
+            class="px-5 py-2 rounded-full border transition-all {{ request()->query('status') == 'completed' ? 'bg-success text-white border-transparent shadow-lg' : 'border-success text-green-400 hover:bg-success hover:text-white' }}">
+                Completed
+            </a>
+        </div>
+    </div>
+
+
+-----------------------------------------------------------------------------------------
 @extends('layouts.appW')
 
 @section('contentW')

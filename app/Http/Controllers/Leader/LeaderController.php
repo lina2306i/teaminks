@@ -87,4 +87,68 @@ class LeaderController extends Controller
     }
 
 
+    public function calendarIndex()
+    {
+        $user = Auth::user();
+
+        // === ÉVÉNEMENTS PROJETS ===
+        $projectEvents = $user->ledProjects() // relation à créer dans User model si pas déjà
+            ->with('team')
+            ->get()
+            ->map(function ($project) {
+                $isOverdue = $project->end_date && Carbon::parse($project->end_date)->isPast();
+
+                return [
+                    'id'              => 'project-' . $project->id,
+                    'title'           => $project->name . ' (' . $project->progress . '%)',
+                    'start'           => $project->start_date?->format('Y-m-d'),
+                    'end'             => $project->end_date?->addDay()->format('Y-m-d'), // FullCalendar exclut l'end
+                    'url'             => route('leader.projects.show', $project),
+                    'backgroundColor' => $isOverdue ? '#dc3545' : ($project->progress == 100 ? '#28a745' : '#0d6efd'),
+                    'borderColor'     => $isOverdue ? '#dc3545' : ($project->progress == 100 ? '#28a745' : '#0d6efd'),
+                    'textColor'       => '#ffffff',
+                    'extendedProps'   => [
+                        'type'     => 'project',
+                        'team'     => $project->team?->name ?? 'Aucune équipe',
+                        'progress' => $project->progress . '%',
+                        'status'   => $isOverdue ? 'En retard' : ($project->progress == 100 ? 'Terminé' : 'En cours'),
+                    ]
+                ];
+            });
+
+        // === ÉVÉNEMENTS TÂCHES (avec due_date ou end_date) ===
+        $taskEvents = Task::whereHas('project', fn($q) => $q->where('leader_id', $user->id))
+            ->whereNotNull('due_date')
+            ->orWhereNotNull('end_date')
+            ->with(['project', 'assignedTo'])
+            ->get()
+            ->map(function ($task) {
+                $deadline = $task->due_date ?? $task->end_date;
+                $isOverdue = $deadline && Carbon::parse($deadline)->isPast() && $task->status !== 'completed';
+
+                return [
+                    'id'              => 'task-' . $task->id,
+                    'title'           => '📌 ' . $task->title . ' (' . ucfirst($task->status) . ')',
+                    'start'           => $task->start_at?->format('Y-m-d') ?? $deadline?->format('Y-m-d'),
+                    'end'             => $deadline?->addDay()->format('Y-m-d'),
+                    'url'             => route('leader.tasks.show', $task),
+                    'backgroundColor' => $isOverdue ? '#e74c3c' : ($task->status === 'completed' ? '#27ae60' : '#f39c12'),
+                    'borderColor'     => $isOverdue ? '#c0392b' : ($task->status === 'completed' ? '#27ae60' : '#e67e22'),
+                    'textColor'       => '#ffffff',
+                    'extendedProps'   => [
+                        'type'      => 'task',
+                        'project'   => $task->project->name,
+                        'assignee'  => $task->assignedTo?->name ?? 'Non assigné',
+                        'priority'  => ucfirst($task->difficulty ?? 'normal'),
+                        'status'    => $isOverdue ? 'En retard' : ucfirst($task->status),
+                    ]
+                ];
+            });
+
+        // Fusion des événements
+        $events = $projectEvents->merge($taskEvents)->values()->toJson();
+
+        return view('leader.calendar.calendar-inter', compact('events'));
+    }
+
 }

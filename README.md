@@ -16,6 +16,7 @@ Le projet inclut à la fois :
 - **API sécurisée** via Laravel Sanctum  
 - **Historique des actions** (modifications de tâches, deadlines, posts) via Spatie Activity Log  
 
+
 ---
 
 ## ⚙️ Installation étape par étape
@@ -41,6 +42,24 @@ composer install
 - npm install 
 - npm run dev
 or - [npm install && npm run dev] 
+node -v
+v20.14.0
+npm -v
+v10.07.0
+-- nvm version
+-- nvm install 22
+nvm use 22
+nvm alias default 22
+nvm install 22
+nvm use 22
+nvm alias default 22
+-- node -v  // compatible avec/requis par le vite 
+v22.21.1
+npm install
+npm run build
+npm run dev
+
+C:\Users\linal_4qqkavn\Desktop\laravelPC\PFA_project\code\Teaminks>npm -v
 -[ composer run dev]
 
     automatiquement :
@@ -111,6 +130,40 @@ composer require spatie/laravel-permission
 
 ⭐ composer require doctrine/dbal
 - Using version ^4.4 for doctrine/dbal
+
+⭐ Utilise le package rahulhaque/laravel-filepond (2026, Laravel 12 compatible) :: Installation (5 minutes)
+
+- C’est le plus moderne, drag & drop parfait, preview, suppression, et zéro bug Laravel.
+** Installe le package : > composer require rahulhaque/laravel-filepond:^12.0
+>  npm i filepond filepond-plugin-file-validate-size filepond-plugin-file-validate-type filepond-plugin-image-preview --save
+** Publie la config et migration : >  php artisan vendor:publish --provider="RahulHaque\Filepond\FilepondServiceProvider"
+                                   >  php artisan migrate
+** Puis dans ta vue : <file-pond name="attachments[]" multiple />
+** Ajoute FilePond CSS/JS dans ton layout appW.blade.php (dans <head> et avant </body>)
+    <!-- Dans <head> -->
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
+    <!-- Avant </body> -->
+    <script src="https://unpkg.com/filepond/dist/filepond.min.js"></script>
+***lancer :
+    -- ✅Mise en production / Serveur live
+    > npm run build
+    Ou
+    --  pour le développement./🚀Tester rapidement
+    > npm run dev 
+
+    🚀 3️⃣ Résultat : ton build est RÉUSSI
+
+        Ces fichiers ont été générés :
+
+        public/build/manifest.json
+        public/build/assets/app-xxxxx.js
+        public/build/assets/app-xxxxx.css
+
+
+        👉 Laravel les charge automatiquement avec :
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 
 ---------------------------------
 

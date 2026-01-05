@@ -10,12 +10,21 @@ use App\Http\Controllers\Leader\LeaderPostController;
 use App\Http\Controllers\Leader\LeaderTeamController;
 use App\Http\Controllers\Leader\LeaderController;
 use App\Http\Controllers\NotificationController;
+// use Illuminate\Support\Facades\Route;
+use RahulHaque\Filepond\Filepond;
 
 // Pages publiques
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/test-filepond', function () {
+    Storage::put('filepond-temp/test.txt', 'ok');
+    return 'Fichier créé avec succès !';
+});
+
+
 
 /*Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');*/
@@ -135,9 +144,8 @@ Route::middleware(['auth', 'role:leader'])
 
         // ==================== PEOJECTS ====================
         // Projets
-        // Route personnalisée d'abord !
             //Créer la route + controller method for the  Calendrier visuel des deadlines (FullCalendar)
-        Route::get('projects/calendar', [LeaderProjectController::class, 'calendar'])
+        Route::get('project/calendar', [LeaderProjectController::class, 'calendar'])
             ->name('projects.calendar');
        // Route::resource('projects', LeaderProjectController::class)->except(['show']);
         //Route::get('projects/{project}', [LeaderProjectController::class, 'show'])->name('projects.show');
@@ -172,12 +180,27 @@ Route::middleware(['auth', 'role:leader'])
                 'destroy' => 'tasks.destroy',
             ]);
         Route::post('tasks/{task}/pin', [LeaderTaskController::class, 'pin'])->name('tasks.pin');
+        // ✅ Route optionnelle pour supprimer un fichier en Ajax
+        Route::delete('/tasks/attachments/{attachment}', [LeaderTaskController::class, 'deleteAttachment'])
+            ->name('tasks.attachments.delete');
 
-    //    Route::resource('tasks', LeaderTaskController::class)
+       //    Route::resource('tasks', LeaderTaskController::class)
       //      ->only(['index', 'create', 'store', 'show']);
 
-        Route::post('tasks/{task}/upload-attachment', [LeaderTaskController::class, 'uploadAttachment'])
-              ->name('tasks.upload-attachment');
+        // Route::post('tasks/{task}/upload-attachment', [LeaderTaskController::class, 'uploadAttachment'])->name('tasks.upload-attachment');
+        // uploadAttachment == tempUpload
+        // Route::post('tasks/temp-upload', [LeaderTaskController::class, 'tempUpload'])->name('tasks.temp-upload');
+
+        //  Route::post('tasks/filepond/upload', [Filepond::class, 'upload'])->name('filepond.upload');
+        // Route::delete('tasks/filepond/revert', [Filepond::class, 'revert'])->name('filepond.revert');
+
+        // Routes de test
+        // Route::get('/tasks/createTest', [LeaderTaskController::class, 'createTest'])->name('test.task.create');
+        // Route::post('/tasks/storeTest', [LeaderTaskController::class, 'storeTest'])->name('test.task.store');
+
+        // Route pour supprimer un attachment via Ajax (optionnel mais recommandé)
+        Route::delete('/leader/tasks/attachments/{attachment}', [LeaderTaskController::class, 'deleteAttachment'])
+            ->name('leader.tasks.attachments.delete');
 
         // ==================== POSTS ====================
         // Liste des posts + pagination
@@ -224,6 +247,10 @@ Route::middleware(['auth', 'role:leader'])
 
 
         // ==================== PROFILE & OTHERS ====================
+        // Calendrier visuel des deadlines (FullCalendar)
+        Route::get('/calendarInterface', [LeaderController::class, 'calendarIndex'])
+            ->name('interface.calendar');
+
         // principe de notify l user par sa tache
         Route::post('/notify', [NotificationController::class, 'store'])
             ->middleware('auth')

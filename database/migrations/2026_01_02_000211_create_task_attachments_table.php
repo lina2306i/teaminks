@@ -18,16 +18,21 @@ return new class extends Migration
             $table->string('path');                        // chemin stocké (storage/app/public/tasks/...)
             $table->string('mime_type')->nullable();
             $table->unsignedBigInteger('size');            // en bytes
-            $table->foreignId('uploaded_by')->constrained('users')->onDelete('set null');
+            $table->foreignId('uploaded_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });
+
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->string('folder_name')->nullable()->after('notes');
+        });
+
     }
 
     public function down(): void
     {
         Schema::dropIfExists('task_attachments');
         Schema::table('tasks', function (Blueprint $table) {
-            $table->dropColumn('attachments_count');
-        });
+        $table->dropColumn('folder_name');
+    });
     }
 };

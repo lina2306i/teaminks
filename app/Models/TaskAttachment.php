@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class TaskAttachment extends Model
 {
@@ -27,6 +28,29 @@ class TaskAttachment extends Model
 
     public function getUrlAttribute(): string
     {
-        return asset('storage/' . $this->path);
+        //return asset('storage/' . $this->path);
+        return Storage::url($this->path);
+    }
+
+    public function getFormattedSizeAttribute()
+    {
+        $bytes = $this->size;
+        if ($bytes === 0) return '0 Bytes';
+        $k = 1024;
+        $sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        $i = floor(log($bytes) / log($k));
+        return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
+    }
+
+    // Supprimer le fichier physique lors de la suppression du modèle
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($attachment) {
+            if (Storage::exists($attachment->path)) {
+                Storage::delete($attachment->path);
+            }
+        });
     }
 }
