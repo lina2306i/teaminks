@@ -15,7 +15,7 @@
                             @csrf @method('PUT')
 
                             <div class="text-center mb-5">
-                                <img src="{{ Auth::user()->avatar ?? 'default-avatar.png' }}" class="rounded-circle mb-3" width="120" height="120">
+                                <img src="{{ Auth::user()->avatar ?? 'user-default.jpg' }}" class="rounded-circle mb-3" width="120" height="120">
                                 <div class="mb-3">
                                     <input type="file" name="avatar" class="form-control form-control-lg" accept="image/*">
                                 </div>

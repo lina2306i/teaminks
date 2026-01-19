@@ -1,26 +1,28 @@
 <nav class="navbar navbar-expand-lg fixed-top bg-gray-900 shadow-lg border-bottom border-gray-700">
     <div class="container-fluid px-4">
-        <!-- Bouton hamburger pour Toggle Sidebar (visible sur md et moins) class="btn text-white d-lg-none me-3"  id="sidebarToggle"-->
-        <button class="btn btn-outline-secondary border-0 d-lg-none" type="button" id="sidebarToggleMobile">
+        <!-- Bouton Toggle Sidebar (visible sur md et moins) -->
+        <button class="btn text-white d-lg-none me-3" type="button" id="sidebarToggle">
             <i class="fas fa-bars fs-4"></i>
         </button>
 
-        <!-- Logo  navbar-brand d-flex align-items-center text-white fw-bold ms-2 ms-lg-0" href="{ { route('home') }}" -->
-        <a class="navbar-brand d-flex align-items-center text-white fw-bold ms-2 ms-lg-0 " href="{{ route('leader.dashboard') }}">
+        <!-- Logo -->
+        <a class="navbar-brand d-flex align-items-center text-white fw-bold" href="{{ route('leader.dashboard') }}">
             <img src="{{ asset('images/logo5-ssbg.png') }}" alt="Teaminks Logo"
-                 class="me-2 logo-bounce" style="height: 45px;">
+                 class="me-2 logo-bounce" style="height: 50px;">
             <span class="fs-4 d-none d-md-inline">
                 Team<span class="text-primary">inks</span>
             </span>
         </a>
-        <!-- Bouton collapse pour mobile (tablette/mobile) text-white ata-bs-target="#navbarContent" aria-controls="navbarContent" -->
-        <button class="navbar-toggler border-0 d-md-none d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <i class="fas fa-ellipsis-v text-white"></i>
+
+        <!-- Collapse Navbar -->
+        <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarContent" aria-controls="navbarContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <i class="fas fa-ellipsis-v"></i>
         </button>
-        <!-- Contenu du menu id="navbarContent" -->
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-             <!-- Liens centrés (desktop seulement) -->
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <!-- Liens centrés (desktop seulement) -->
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0 d-none d-lg-flex">
                 <li class="nav-item">
                     <a class="nav-link text-white px-4 py-2 rounded-pill {{ request()->routeIs('home') ? 'bg-primary' : '' }}"
@@ -84,7 +86,7 @@
                     <div class="dropdown">
                         <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
                         id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="{{ Auth::user()->profile ?? asset('images/user-default.jpg') }}"
+                            <img src="{{ Auth::user()->profile ?? asset('images/logo5.png') }}"
                                 alt="Profile" class="rounded-circle border border-2 border-primary"
                                 style="width: 38px; height: 38px; object-fit: cover;">
                             <span class="ms-2 d-none d-xl-inline">{{ Auth::user()->name }}</span>
@@ -115,7 +117,7 @@
                 @endauth
             </div>
         </div>
-    </>
+    </div>
 </nav>
 
 <!-- Logout Form -->
@@ -125,12 +127,6 @@
 
 <!-- Overlay pour mobile -->
 <div class="sidebar-overlay d-lg-none"></div>
-<!-- Bouton flottant pour mobile (bas gauche) -->
-<button class="btn btn-primary rounded-circle p-3 position-fixed d-lg-none"
-        style="bottom: 20px; left: 20px; z-index: 1020; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
-        id="sidebarToggleFloat">
-    <i class="fas fa-bars fs-5"></i>
-</button>
 
 
 <style>

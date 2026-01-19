@@ -22,8 +22,7 @@
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-    <!-- Styles -->
+     <!-- Styles -->
     <link href="{{ asset('css/styleAppW.css') }}" rel="stylesheet">
     <!-- Posts CSS (seulement si tu veux le garder séparé) -->
     <!-- <link rel="stylesheet" href="{{-- asset('css/posts.css') --}}"> -->

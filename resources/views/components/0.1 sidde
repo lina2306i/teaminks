@@ -1,0 +1,201 @@
+<aside class="sidebar position-fixed top-0 start-0 h-100 bg-gray-950 border-end border-gray-800 d-flex flex-column transition-all"
+       id="sidebar" style="width: 280px; z-index: 1040;">
+    <div class="d-flex flex-column h-100">
+        <!-- Header -->
+        <div class="p-4 border-bottom border-gray-700 text-center">
+            <a href="{{ route('leader.dashboard') }}" class="d-flex align-items-center justify-content-center gap-3 text-decoration-none">
+                       <img src="{{ asset('images/logo5.png') }}"
+                            alt="Teamink Logo"
+                            class="logo-img rounded-circle border border-2 border-primary"
+                            style="height: 45px; width: 45px; object-fit: cover;">
+                <div class="text-start d-none d-lg-block">
+                    <h6 class="fw-bold text-primary mb-0">Teaminks</h6>
+                    <small class="text-gray-400">Workspace</small>
+                </div>
+            </a>
+        </div>
+
+        <!-- Menu sidebar-nav  py-4 px-3-->
+        <nav class=" flex-1 px-4 py-6 overflow-y-auto">
+            <ul class="space-y-2 nav flex-column gap-2">
+                @php $currentRoute = request()->route()->getName(); @endphp
+                <li class="nav-item">
+                    <a href="{{ route('leader.dashboard') }}" class=" nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                    {{ str_starts_with($currentRoute, 'leader.dashboard') ? 'active bg-gray-800 text-white border-start border-primary border-4' : 'hover:bg-gray-800 hover:text-white' }}">
+                        <i class="fas fa-th-large fs-5"></i>
+                        <span class="sidebar-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('leader.team.index') }}" class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                     {{ str_starts_with($currentRoute, 'leader.team') ? 'active bg-gray-800 text-white border-start border-primary border-4' : 'hover:bg-gray-800 hover:text-white' }}">
+                        <i class="fas fa-users fs-5"></i>
+                        <span class="sidebar-text">Team</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('leader.posts.index') }}" class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                    {{ str_starts_with($currentRoute, 'leader.posts') ? 'active bg-gray-800 text-white border-start border-primary border-3' : 'hover:bg-gray-800 hover:text-white' }} transition-all">
+                        <i class="fas fa-newspaper fs-5"></i>
+                        <span class="sidebar-text">Posts</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('leader.projects.index') }}" class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                     {{ str_starts_with($currentRoute, 'leader.projects') ? 'active bg-gray-800 text-white border-start border-primary border-3' : 'hover:bg-gray-800 hover:text-white' }} transition-all">
+                        <i class="fas fa-project-diagram fs-5"></i>
+                        <span class="sidebar-text">Projects</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('leader.tasks.index') }}"class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                    {{ str_starts_with($currentRoute, 'leader.tasks') ? 'active bg-gray-800 text-white border-start border-primary border-3' : 'hover:bg-gray-800 hover:text-white' }} transition-all">
+                        <i class="fas fa-clipboard-check fs-5"></i>
+                        <span class="sidebar-text">Tasks</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('leader.interface.calendar') }}" class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                    {{ str_starts_with($currentRoute, 'leader.calendar') ? 'active bg-primary rounded' : '' }}" >
+                        <i class="fas fa-calendar-alt me-2 d-md-inline "></i>
+                        <span class="sidebar-text">Calendar</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{-- route('leader.folders') --}}" class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                    {{ request()->is('leader/folders*') ? 'active bg-gray-800 text-white border-start border-primary border-3' : 'hover:bg-gray-800 hover:text-white' }} transition-all">
+                        <i class="fas fa-folder-closed fs-5"></i>
+                        <span class="sidebar-text">Folders</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('leader.notes') }}" class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                     {{ str_starts_with($currentRoute, 'leader.notes') ? 'active bg-gray-800 text-white border-start border-primary border-3' : 'hover:bg-gray-800 hover:text-white' }} transition-all">
+                        <i class="fas fa-note-sticky fs-5"></i>
+                        <span class="sidebar-texte">Notes</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('leader.notifications') }}" class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300
+                     {{ str_starts_with($currentRoute, 'leader.notifications') ? 'active bg-gray-800 text-white border-start border-primary border-3' : 'hover:bg-gray-800 hover:text-white' }} transition-all">
+                        <i class="fas fa-bell fs-5"></i>
+                        <span class="sidebar-text">Notifications</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Footer Profil + Logout -->
+        @auth
+            <div class="border-top border-gray-700 p-2">
+                <div class="flex mb-col-4 d-flex align-items-center justify-content-between">
+                    <dd class="row mb-col-4">
+                        <a href="{{ route('leader.profile') }}" class="nav-link gap-3 py-3 px-4 rounded-lg  d-flex  text-gray-400 transition-all duration-300">
+                            <img src="{{ auth()->user()->profile ?? asset('images/user-default.jpg') }}" alt="Profile"
+                                class="rounded-circle border border-2 border-primary" style="width: 45px; height: 45px; object-fit: cover;">
+                            <div class="d-none d-lg-block">
+                                <div class="text-white fw-semibold">{{ Str::limit(auth()->user()->name, 15) }}</div>
+                                <small class="text-gray-400">{{ Str::limit(auth()->user()->email, 20) }}</small>
+                            </div>
+                        </a>
+                    <div class="d-none d-lg-block" style="margin-block-end: initial">
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill p-2" title="Logout">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                            </form>
+                        </div>
+                    </dd>
+                    <!--dd --  class="row mb-col-6" >
+                    <div class="flex-grow-1 mb-col-2 ">
+                        <form action="{ { route('logout') }}" method="POST">
+                            @ csrf
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill p-2" title="Logout">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
+                    </div><div class="flex items-center gap-3 text-gray-400">
+                        <i class="fas fa-shield-alt"></i>
+                        <small>Secure Workspace</small>
+                    </div>
+                    </!--dd-->
+
+
+                </div>
+
+            </div>
+        @endauth
+    </div>
+</aside>
+
+<style>
+    @media (max-width: 992px) {
+        aside#sidebar {
+            width: 80px !important;
+            min-width: 80px !important;
+        }
+        .sidebar-text { display: none; }
+        .sidebar .nav-link { justify-content: flex-start start;padding-left: 1px; }
+
+        aside#sidebar .d-none.d-lg-inline,
+        aside#sidebar .d-none.d-md-block {
+            display: none !important;
+        }
+
+        main {
+            margin-left: 80px !important;
+        }
+
+        .navbar-toggler {
+            display: block !important;
+        }
+    }
+
+    /* Logo Animation */
+    .logo-img {
+        transition: transform 0.3s ease;
+    }
+
+    .logo-img:hover {
+        transform: rotate(360deg) scale(1.1);
+    }
+
+
+     /* Animation au hover */
+    .sidebar-link i {
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar-link:hover i {
+        transform: scale(1.1);
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+</style>
+
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const overlay = document.querySelector('.sidebar-overlay');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('show');
+        overlay.classList.toggle('active');
+        document.body.classList.toggle('sidebar-open');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+    });
+</script>

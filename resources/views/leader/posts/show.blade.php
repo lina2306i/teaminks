@@ -14,11 +14,13 @@
             <!-- Post Card -->
             <div class="card bg-gray-900 border border-gray-700 rounded-xl shadow-2xl text-white">
                 <div class="card-body p-6">
-                    <!-- Header: Author + Date -->
+                    <!-- Header: Author + Date
+                        class="w-16 h-16 rounded-full border-4 border-blue-500 object-cover">
+                    -->
                     <div class="flex items-center gap-4 mb-5">
-                        <img src="{{ $post->user->profile ?? asset('images/default-avatar.png') }}"
+                        <img src="{{ $post->user->profile ?? asset('images/user-default.jpg') }}"
                              alt="Profile"
-                             class="w-16 h-16 rounded-full border-4 border-blue-500 object-cover">
+                                class="rounded-circle me-3 shadow-sm" width="50" height="50">
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-user text-blue-400"></i>
@@ -59,7 +61,7 @@
 
                     <!-- Title and Content -->
                     <h1 class="text-3xl fw-bold mb-3">{{ $post->title ?? 'Untitled Post' }}</h1>
-                    <p class="text-gray-200 text-lg mb-5 leading-relaxed">{{ $post->content }}</p>
+                    <p class="text-gray-200 text-lg mb-5 leading-relaxed border-blue-500">{{ $post->content }}</p>
 
                     <!-- Post Image (if present) -->
                     @if($post->image)
@@ -130,14 +132,14 @@
                     @endif
 
                     <!-- Comments List -->
-                    <h3 class="h5 fw-bold mb-4">Comments</h3>
+                    <h5 class="h5 fw-bold mb-4">Comments</h5>
                     @if($post->comments->count() > 0)
                         <div class="space-y-4">
                             @foreach($post->comments as $comment)
                                 <div class="d-flex gap-3 bg-gray-800 rounded-lg p-4">
-                                    <img src="{{ $comment->user->profile ?? asset('images/default-avatar.png') }}"
+                                    <img src="{{ $comment->user->profile ?? asset('images/user-default.jpg') }}"
                                          alt="Profile"
-                                         class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                                         class="w-10 h-10 rounded-full object-cover flex-shrink-0 rounded-circle me-3 shadow-sm" width="50" height="50">
                                     <div class="flex-1">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
@@ -159,9 +161,10 @@
                                                 </form>
                                             @endif
                                         </div>
-                                        <p class="text-gray-200 mt-2 mb-0">{{ $comment->content }}</p>
+                                        <p class="text-gray-200 mt-2 mb-0">"{{ $comment->content }}"</p>
                                     </div>
                                 </div>
+                                <br>
                             @endforeach
                         </div>
                     @else
@@ -186,9 +189,9 @@
                     <div class="space-y-3">
                         @foreach($post->likes as $like)
                             <div class="d-flex align-items-center gap-3 bg-gray-800 rounded p-3">
-                                <img src="{{ $like->user->profile ?? asset('images/default-avatar.png') }}"
-                                     alt="Profile"
-                                     class="w-10 h-10 rounded-full object-cover">
+                                <img src="{{ $like->user->profile ?? asset('images/user-default.jpg') }}"
+                                     alt="Profile" width="50" height="50"
+                                     class="rounded-circle me-3 shadow-sm w-10 h-10 rounded-full object-cover">
                                 <div>
                                     <strong>{{ $like->user->name }}</strong>
                                     <small class="text-gray-400 d-block">

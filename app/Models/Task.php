@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Task extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'project_id',
         'title',
@@ -110,5 +114,21 @@ class Task extends Model
     public function getAttachmentsCountAttribute(): int
     {
         return $this->attachments()->count();
+    }
+
+
+
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['title', 'status', 'description', 'assigned_to'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'a créé la tâche',
+                'updated' => 'a modifié la tâche',
+                'deleted' => 'a supprimé la tâche',
+                default => $eventName,
+            });
     }
 }

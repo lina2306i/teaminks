@@ -339,7 +339,6 @@ use App\Models\Task;
 
         <!-- Graphiques Chart.js -->
         <div class="row g-4 mb-5">
-
             <!-- Tâches complétées par jour -->
             <div class="col-lg-6">
                 <div class="card bg-gray-800 text-white shadow-lg border-0 rounded-3">
@@ -423,16 +422,150 @@ use App\Models\Task;
                     </div>
                 </div>
             </div>
+
+
+
             <!-- Graphiques + filtre -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-white">Activité récente</h4>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-light active" data-days="7">7 jours</button>
+                    <button class="btn btn-outline-light" data-days="30">30 jours</button>
+                    <button class="btn btn-outline-light" data-days="90">90 jours</button>
+                </div>
+            </div>
+            <div class="row g-4 mb-5">
+                <div class="col-lg-6">
+                    <div class="card bg-gray-800 shadow-lg border-0 rounded-3">
+                        <div class="card-body p-4">
+                            <canvas id="completedTasksChart" height="280"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card bg-gray-800 shadow-lg border-0 rounded-3">
+                        <div class="card-body p-4">
+                            <canvas id="membersActivityChart" height="280"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-
-            <hr class="border-gray-600 my-5">
             <!-- Workload heatmap simple -->
+             <!-- Workload heatmap – Charge de l'équipe -->
+             <!-- Debug temporaire -->
+
             <h4 class="fw-bold text-white mb-4 d-flex align-items-center gap-2">
                 <i class="fas fa-weight-hanging text-warning"></i>
                 Workload Team Members
+
             </h4>
-            <!-- Workload heatmap global – Toutes les équipes de l'utilisateur -->
+            <!-- Workload global – Toutes les équipes de l'utilisateur -->
+            <!-- Workload heatmap – Charge de l'équipe -->
+            <h4 class="fw-bold text-white mb-4 d-flex align-items-center gap-2">
+                <i class="fas fa-weight-hanging text-warning"></i>
+                Charge de l'équipe
+                @if($currentTeam)
+                    <small class="text-gray-400 ms-2">({{ $currentTeam->name }})</small>
+                @endif
+            </h4>
+            @if(!$currentTeam)
+                <div class="alert alert-warning bg-gray-800 border-warning text-center py-5 rounded-3 shadow mb-5">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h5>Aucune équipe sélectionnée</h5>
+                    <p class="mb-3">Sélectionne ou crée une équipe pour voir la charge de ses membres.</p>
+                    <a href="{{ route('leader.team.index') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-users me-2"></i> Gérer mes équipes
+                    </a>
+                </div>
+            @elseif($currentTeamMembers->isEmpty())
+                <div class="alert alert-info bg-gray-800 border-0 text-center py-5 rounded-3 shadow">
+                    <i class="fas fa-users-slash fa-3x mb-3 opacity-75"></i>
+                    <h5>Aucun membre accepté dans cette équipe</h5>
+                    <p class="mb-3 text-gray-400">
+                        Invite des membres ou accepte les demandes en attente.
+                    </p>
+                    <a href="{{ route('leader.team.show', $currentTeam) }}" class="btn btn-outline-info">
+                        <i class="fas fa-user-plus me-2"></i> Gérer les membres
+                    </a>
+                </div>
+            @else
+                <div class="row g-4 mb-5">
+                    @foreach($currentTeamMembers as $member)
+                        @php
+                            // Calcul réel basé sur les projets de l'équipe
+                            $assignedTasks = Task::where('assigned_to', $member->id)
+                                ->whereIn('project_id', $currentTeam->projects->pluck('id'))
+                                ->get();
+
+                            $totalTasks     = $assignedTasks->count();
+                            $pendingTasks   = $assignedTasks->where('status', '!=', 'completed')->count();
+                            $overdueTasks   = $assignedTasks->where('end_date', '<', now())
+                                                        ->where('status', '!=', 'completed')
+                                                        ->count();
+
+                            // Charge pondérée
+                            $load = 50 + ($pendingTasks * 25) + ($overdueTasks * 35);
+                            $load = min(max($load, 0), 150);
+
+                            $color = $load < 70 ? 'success' : ($load < 100 ? 'warning' : 'danger');
+                            $icon  = $load < 70 ? 'smile' : ($load < 100 ? 'meh' : 'frown');
+                        @endphp
+
+                        <div class="col-md-6 col-lg-4 col-xl-3">
+                            <div class="card bg-gray-800 border-0 shadow-lg hover-scale transition h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3 position-relative d-inline-block">
+                                        <img src="{{ $member->profile ?? asset('images/user-default.jpg') }}"
+                                            class="rounded-circle shadow border border-{{ $color }} border-3"
+                                            width="80" height="80" alt="{{ $member->name }}">
+                                        <i class="fas fa-{{ $icon }} fa-xl position-absolute bottom-0 end-0 text-{{ $color }} bg-dark rounded-circle p-2 shadow-sm"
+                                        style="transform: translate(30%, 30%);"></i>
+                                    </div>
+
+                                    <h6 class="mb-2">
+                                        <a href="{{ route('leader.users.profile', $member) ?? '#' }}"
+                                        class="text-white text-decoration-none hover-text-{{ $color }}">
+                                            {{ Str::limit($member->name, 18) }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-gray-500">{{ $member->position ?? 'Collaborateur' }}</small>
+
+
+                                    <div class="progress bg-gray-700 rounded-pill mb-3 mx-auto" style="width: 90%; height: 10px;">
+                                        <div class="progress-bar bg-{{ $color }} rounded-pill shadow-sm"
+                                            style="width: {{ min($load, 100) }}%">
+                                            <span class="visually-hidden">{{ $load }}%</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="small text-center">
+                                        <div>Charge : <strong class="text-{{ $color }}">{{ $load }}%</strong></div>
+                                        <div class="mt-1">
+                                            {{ $totalTasks }} tâches •
+                                            <span class="text-warning">{{ $pendingTasks }} en cours</span> •
+                                            @if($overdueTasks > 0)
+                                                <span class="text-danger animate-pulse">{{ $overdueTasks }} retard</span>
+                                            @else
+                                                <span class="text-success">OK--Aucun retard</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+            <div class="alert alert-secondary mb-4">
+                <strong>Debug équipe actuelle :</strong><br>
+                Current Team ID : {{ $currentTeam->id ?? 'NULL' }}<br>
+                Current Team Name : {{ $currentTeam->name ?? 'Aucune' }}<br>
+                Nombre membres trouvés : {{ $currentTeamMembers->count() ?? 'variable non définie' }}
+            </div>
+            <hr class="border-gray-600 my-5">
+
+
             <!-- 1️⃣ Workload Heatmap – Charge des membres d'ÉQUIPE -->
             <h4 class="fw-bold text-white mb-4 d-flex align-items-center gap-2">
                 <i class="fas fa-weight-hanging text-warning"></i>
@@ -731,18 +864,122 @@ use App\Models\Task;
                     </div>
                 </div>
             </div>
+
+
             <hr class="border-gray-600 my-5">
-            <!-- Debug temporaire -->
-            <div class="alert alert-secondary mb-4">
-                <strong>Debug équipe actuelle :</strong><br>
-                Current Team ID : {{ $currentTeam->id ?? 'NULL' }}<br>
-                Current Team Name : {{ $currentTeam->name ?? 'Aucune' }}<br>
-                Nombre membres trouvés : {{ $currentTeamMembers->count() ?? 'variable non définie' }}
-            </div>
-            <div class="alert alert-secondary mb-4">
-                <strong>Debug Workload Projets :</strong><br>
-                Nombre membres trouvés : {{ $projectMembers->count() ?? 'variable non définie' }}
-            </div>
+            <h4 class="fw-bold text-white mb-4 d-flex align-items-center gap-2">
+                <i class="fas fa-briefcase text-primary"></i>
+                Charge des membres – Tous projets ({{ $projectMembers->count() }})
+            </h4>
+            @if($projectMembers->isEmpty())
+                <div class="alert alert-secondary bg-gray-800 border-0 text-center py-6 rounded-3 shadow mb-5">
+                    <i class="fas fa-tasks fa-3x mb-3 opacity-50"></i>
+                    <h5 class="mb-2">Aucun membre assigné aux projets</h5>
+                    <p class="text-gray-400">Assigne des tâches à des membres pour voir leur charge.</p>
+                    <a href="{{ route('leader.tasks.index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-tasks me-2"></i> Gérer --Assigner une tâche
+                    </a>
+                </div>
+            @else
+                <div class="row g-4 mb-5">
+                    @foreach($projectMembers as $member)
+                        @php
+                            // Calcul pour membres PROJETS (toutes tâches assignées aux projets de l'utilisateur)
+                            $assignedTasks = Task::where('assigned_to', $member->id)
+                                ->whereIn('project_id', Auth::user()->projects->pluck('id'))
+                                ->with('project') // optionnel, pour debug
+                                ->get();
+
+                            $totalTasks     = $assignedTasks->count();
+                            $pendingTasks   = $assignedTasks->where('status', '!=', 'completed')->count();
+                            $overdueTasks   = $assignedTasks->where('due_date', '<', now())
+                                                        ->where('status', '!=', 'completed')
+                                                        ->count();
+
+                            // Utilise les compteurs pré-calculés (withCount)
+
+                            // Charge pondérée
+                            $load = 40 + ($pendingTasks * 28) + ($overdueTasks * 35);
+                            $load = min(max($load, 0), 160);
+                            $color = $load < 75 ? 'success' : ($load < 110 ? 'warning' : 'danger');
+                            $icon  = $load < 75 ? 'smile' : ($load < 110 ? 'meh' : 'dizzy');
+
+                        @endphp
+
+                        <div class="col-md-6 col-lg-4 col-xl-3 ">
+                            <div class="card bg-gray-800 border-0 shadow-lg hover-scale transition h-100 position-relative overflow-hidden">
+                                <!-- Badge surcharge -->
+                                @if($load > 120)
+                                    <div class="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 fs-2xs fw-bold rounded-end m-1">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>URGENT
+                                    </div>
+                                @endif
+
+                                <div class="card-body text-center p-4">
+                                    <!-- Avatar + humeur -->
+                                    <div class="mb-4 position-relative d-inline-block">
+                                        <img src="{{ $member->profile ?? asset('images/user-default.jpg') }}"
+                                            class="rounded-circle shadow-lg border border-{{ $color }} border-3 mx-auto"
+                                            width="80" height="80" alt="{{ $member->name }}">
+                                        <i class="fas fa-{{ $icon }} fa-2x position-absolute bottom-0 end-0 text-{{ $color }} bg-dark rounded-circle p-2 shadow"
+                                        style="transform: translate(30%, 30%);"></i>
+                                    </div>
+                                    <!-- Nom + lien profil +role -->
+                                    <div class="mb-3">
+                                        <h6 class="mb-1">
+                                            <a href="{{ route('leader.users.profile', $member) }}"
+                                            class="text-white text-decoration-none hover-text-{{ $color }} fw-semibold">
+                                                {{ Str::limit($member->name, 22) }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-gray-500">{{ $member->position ?? 'Collaborateur' }}</small>
+                                    </div>
+
+                                    <!-- Progress bar améliorée -->
+                                    <div class="progress-container mb-4 mx-auto" style="width: 95%;">
+                                        <div class="progress bg-gray-700 rounded-pill shadow-sm mb-1" style="height: 14px;">
+                                            <div class="progress-bar bg-gradient-{{ $color }} rounded-pill shadow-sm pulse-{{ $color }}"
+                                                role="progressbar"
+                                                style="width: {{ min($load, 100) }}%; transition: width 1s ease;"
+                                                aria-valuenow="{{ $load }}" aria-valuemin="0" aria-valuemax="160">
+                                                <small class="progress-text text-white fw-bold fs-2xs">{{ min($load, 100) }}%</small>
+                                            </div>
+                                        </div>
+                                        <small class="text-{{ $color }} fw-semibold d-block text-center">{{ $load }}% total charge</small>
+                                    </div>
+
+                                    <!-- Badges stats -->
+                                    <div class="d-flex justify-content-center gap-2 flex-wrap small mb-3">
+                                        <span class="badge bg-primary fs-2xs px-2 py-1">{{ $totalTasks }} tâches</span>
+                                        <span class="badge bg-warning fs-2xs px-2 py-1">{{ $pendingTasks }} en cours</span>
+                                        @if($overdueTasks > 0)
+                                            <span class="badge bg-danger fs-2xs px-2 py-1 animate-pulse">
+                                                <i class="fas fa-clock me-1"></i>{{ $overdueTasks }} retard
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <!-- Quick action -->
+                                    <div class="mt-3">
+                                        <a href="{{ route('leader.tasks.index', ['assigned_to' => $member->id]) }}"
+                                        class="btn btn-sm btn-outline-{{ $color }} w-100">
+                                            <i class="fas fa-tasks me-1"></i>
+                                            Voir ses tâches
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+
+
+
+
+
+
         </div>
 
         <!-- Activity stream récent -->
@@ -762,7 +999,7 @@ use App\Models\Task;
                             </div>
                         </li>
                     @empty
-                        <li class="list-group-item bg-transparent text-center text-white py-5">
+                        <li class="list-group-item bg-transparent text-center text-gray-400 py-5">
                             Aucune activité récente.
                         </li>
                     @endforelse

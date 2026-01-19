@@ -99,16 +99,24 @@ class User extends Authenticatable
         return $this->belongsToMany(Team::class, 'team_members')
                     ->withPivot('role', 'status')   // pending ou accepted
                     ->wherePivot('role', 'member')
+                    ->withPivot('role', 'status', 'accepted')
                     ->withTimestamps();
-
-
-
+    }
+    // Probable 3 : équipe actuelle
+    public function currentTeam()
+    {
+        return $this->belongsTo(Team::class, 'current_team_id');
     }
 
 
     public function tasks()
     {
         return $this->hasMany(Task::class, 'assigned_to');
+    }
+
+    public function subtasks()
+    {
+        return $this->hasMany(Subtask::class, 'assigned_to');
     }
 
     public function posts()

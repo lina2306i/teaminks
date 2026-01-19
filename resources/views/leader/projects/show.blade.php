@@ -10,6 +10,11 @@
                 <a href="{{ route('leader.projects.index') }}" class="btn btn-outline-light ">
                         ← Back to Project
                 </a>
+                <a href="{{ route('leader.tasks.kanban', $project) }}" class="btn btn-outline-info">
+                    <i class="fas fa-columns me-2"></i> Voir en Kanban
+                </a>
+
+
                 <!-- Titre du projet display-5 -->
                 <h1 class=" display-6  fw-bold text-gradient mb-3">{{ $project->name }}</h1>
                 <!-- Infos dates + équipe -->
@@ -57,7 +62,7 @@
             <div class="text-end">
                 <a href="{{ route('leader.projects.edit', $project) }}"
                 class="btn btn-outline-primary btn-lg me-2">
-                    <i class="fas fa-edit me-2"></i> Edit
+                    <i class="fas fa-edit me-2"></i> Edit project
                 </a>
                 <!--button type="button"
                         class="btn btn-outline-danger btn-lg"
@@ -81,21 +86,21 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content bg-gray-800 text-white border-0">
                     <div class="modal-header border-0">
-                        <h5 class="modal-title">Confirmer la suppression</h5>
+                        <h5 class="modal-title">Confirm the deletion</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Êtes-vous sûr de vouloir <strong>supprimer définitivement</strong> le projet :</p>
+                        <p>Are you sure you want to <strong>delete definitively</strong> the project :</p>
                         <p class="fw-bold text-warning mb-0">"{{ $project->name }}"</p>
                         <small class="text-gray-400 d-block mt-3">
-                            Cette action est irréversible. Toutes les tâches associées seront également supprimées.
+                            This action is irreversible. All associated tasks will also be deleted.
                         </small>
                     </div>
                     <div class="modal-footer border-0">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <form action="{{ route('leader.projects.destroy', $project) }}" method="POST" class="d-inline">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+                            <button type="submit" class="btn btn-danger">Yes, delete</button>
                         </form>
                     </div>
                 </div>
@@ -363,6 +368,157 @@
                         @endif
                     </div>
                 </div>
+            </div>
+
+
+        </div>
+        <!-- Analyse de la charge de travail des membres + Tâches non assignées -->
+        <hr class="bg-light opacity-25 my-3">
+        <!-- Workload par membre + Tâches non assignées -->
+        <div class="card row g-4 bg-gray-800 text-white mt-5 shadow-lg border-0 rounded-xl">
+            <div class="card-header bg-info fw-bold d-flex justify-content-between align-items-center">
+                <span>Workload & Tasks of the project</span>
+                <small>Total tasks : {{ $project->tasks->count() }}</small>
+            </div>
+
+            <div class="card-body">
+
+                <!-- 1. Workload des membres (basé sur les tâches réelles assignées) -->
+                @php
+                    // Membres qui ont au moins une tâche assignée dans ce projet
+                    $activeMembers = $project->tasks()
+                        ->whereNotNull('assigned_to')
+                        ->with('assignedTo')
+                        ->get()
+                        ->pluck('assignedTo')
+                        ->unique('id')
+                        ->sortBy('name');
+                @endphp
+
+                @if($activeMembers->count() > 0)
+                    <h5 class="fw-semibold mb-4 text-info">Workload of members</h5>
+                    <div class="row g-4 mb-5">
+                        @foreach($activeMembers as $member)
+                            @php
+                                $assignedTasks = $project->tasks()->where('assigned_to', $member->id)->get();
+                                $total = $assignedTasks->count();
+                                $completed = $assignedTasks->where('status', 'completed')->count();
+                                $pending = $total - $completed;
+                                $overdue = $assignedTasks
+                                    ->where('end_date', '<', now())
+                                    ->where('status', '!=', 'completed')
+                                    ->count();
+                                $progress = $total ? round(($completed / $total) * 100) : 0;
+                            @endphp
+
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card bg-gray-700 h-100 border {{ $overdue > 0 ? 'border-danger animate-pulse' : 'border-gray-600' }}">
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <img src="{{ $member->profile ?? asset('images/user-default.jpg') }}"
+                                                class="rounded-circle me-3 shadow-sm" width="50" height="50">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">{{ $member->name }}</h6>
+                                                <small class="text-gray-400 d-block">{{ $member->email }}</small>
+                                            </div>
+                                        </div>
+
+
+                                        <!-- Barre de progression -->
+                                        <div class="progress bg-gray-600 mb-3" style="height: 12px; border-radius: 6px;">
+                                            <div class="progress-bar bg-success" role="progressbar"
+                                                style="width: {{ $progress }}%" aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+
+                                        <!-- Badges -->
+                                        <div class="d-flex flex-wrap gap-2 justify-content-center small mt-auto">
+                                            <span class="badge bg-primary px-3 py-2">{{ $total }} tasks</span>
+                                            <span class="badge bg-success px-3 py-2">{{ $completed }} completed</span>
+                                            <span class="badge bg-warning px-3 py-2">{{ $pending }} in progress</span>
+                                            @if($overdue > 0)
+                                                <span class="badge bg-danger px-3 py-2 animate-pulse">{{ $overdue }} overdue</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="alert alert-info text-center py-4 mb-5">
+                        <i class="fas fa-users-slash fa-2x mb-3 d-block text-info"></i>
+                        No member has tasks assigned in this project for now.
+                    </div>
+                @endif
+
+                <!-- 2. Tâches non assignées (toujours visibles) -->
+                @if($project->tasks->whereNull('assigned_to')->count() > 0)
+                    <div class="card bg-gray-900 border border-warning mb-5">
+                        <div class="card-header bg-warning text-dark fw-bold">
+                            Unassigned tasks ({{ $project->tasks->whereNull('assigned_to')->count() }})
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                @foreach($project->tasks->whereNull('assigned_to') as $task)
+                                    <li class="list-group-item bg-transparent text-white border-bottom border-warning py-3">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                            <div class="flex-grow-1">
+                                                <a href="{{ route('leader.tasks.show', $task) }}"
+                                                    class="text-warning fw-bold d-block mb-1">
+                                                    {{ $task->title }}
+                                                </a>
+                                                <small class="text-gray-400 d-block">
+                                                    {{ Str::limit($task->description ?? 'No description', 90) }}
+                                                </small>
+                                                <small class="text-gray-500 d-block">
+                                                    Created on {{ $task->created_at->format('d/m/Y') }}
+                                                </small>
+                                            </div>
+                                            <div>
+                                                <a href="{{ route('leader.tasks.edit', $task) }}"
+                                                    class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-user-plus me-1"></i> Assign
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @elseif($project->tasks->count() > 0)
+                    <div class="alert alert-success text-center py-4 mb-5">
+                        <i class="fas fa-check-circle fa-2x mb-3 d-block"></i>
+                        All tasks in this project are assigned.
+                    </div>
+                @endif
+
+                <!-- 3. Aperçu rapide des tâches assignées (optionnel) -->
+                @if($project->tasks->whereNotNull('assigned_to')->count() > 0)
+                    <div class="text-center small text-gray-400">
+                        <small>
+                            Quick overview :
+                             {{ $project->tasks->whereNotNull('assigned_to')->count() }} out of  {{ $project->tasks->count() }} tasks are assigned.
+                            <br>
+                            {{ $project->tasks->whereNull('assigned_to')->count() }} out of {{ $project->tasks->count() }} tasks are unassigned.
+                        </small>
+
+                    </div>
+                @endif
+
+                <!-- Bouton créer tâche si aucune -->
+                @if($project->tasks->count() === 0)
+                    <div class="text-center py-5">
+                        <i class="fas fa-tasks fa-4x text-gray-600 mb-4 d-block"></i>
+                        <h5 class="text-gray-400 mb-3"> No tasks for this project.
+                             </h5>
+                        <a href="{{ route('leader.tasks.create', ['project' => $project->id]) }}"
+                        class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i> Create the first task
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

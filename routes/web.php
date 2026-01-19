@@ -18,6 +18,9 @@ use RahulHaque\Filepond\Filepond;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/index', function () {
+    return view('components.logEx.indexSign');
+});
 
 Route::get('/test-filepond', function () {
     Storage::put('filepond-temp/test.txt', 'ok');
@@ -162,12 +165,11 @@ Route::middleware(['auth', 'role:leader'])
                 'destroy' => 'projects.destroy',
             ]);
 
-
-
         // ==================== TASKS ====================
+
         // Tâches
-      //  Route::resource('tasks', LeaderTaskController::class)->except(['show']);
-      //  Route::get('tasks/{task}', [LeaderTaskController::class, 'show'])->name('tasks.show');
+        //  Route::resource('tasks', LeaderTaskController::class)->except(['show']);
+        //  Route::get('tasks/{task}', [LeaderTaskController::class, 'show'])->name('tasks.show');
 
         Route::resource('tasks', LeaderTaskController::class)
             ->names([
@@ -202,7 +204,15 @@ Route::middleware(['auth', 'role:leader'])
         Route::delete('/leader/tasks/attachments/{attachment}', [LeaderTaskController::class, 'deleteAttachment'])
             ->name('leader.tasks.attachments.delete');
 
-        // ==================== POSTS ====================
+
+        Route::get('/tasks/kanban/{project?}', [LeaderTaskController::class, 'kanban'])
+            ->name('tasks.kanban');
+
+        Route::patch('/tasks/{task}/update-status', [LeaderTaskController::class, 'updateStatus'])
+            ->name('tasks.update-status');
+
+
+            // ==================== POSTS ====================
         // Liste des posts + pagination
         Route::get('posts', [LeaderPostController::class, 'index'])->name('posts.index');
         // Création
@@ -220,6 +230,9 @@ Route::middleware(['auth', 'role:leader'])
         Route::delete('posts/{post}', [LeaderPostController::class, 'destroy'])->name('posts.destroy');
        // In routes/web.php
         //Route::get('posts/{post}/image/delete', [LeaderPostController::class, 'destroyImage'])->name('posts.destroy-image');
+
+
+
         // ==================== ACTIONS SUR POST ====================
         // Like / Unlike (toggle)
         Route::post('posts/{post}/like', [LeaderPostController::class, 'toggleLike'])->name('posts.like.toggle');
@@ -246,6 +259,11 @@ Route::middleware(['auth', 'role:leader'])
         Route::delete('team/{team}/remove/{user}', [LeaderTeamController::class, 'remove'])->name('team.remove');
 
 
+        Route::post('team/{team}/invite-search', [LeaderTeamController::class, 'inviteBySearch'])->name('team.invite.search');
+        Route::post('team/{team}/promote/{user}', [LeaderTeamController::class, 'promote'])->name('team.promote');
+        Route::post('team/{team}/demote/{user}', [LeaderTeamController::class, 'demote'])->name('team.demote');
+        Route::post('team/{team}/regenerate-code', [LeaderTeamController::class, 'regenerateCode'])->name('team.regenerate-code');
+
         // ==================== PROFILE & OTHERS ====================
         // Calendrier visuel des deadlines (FullCalendar)
         Route::get('/calendarInterface', [LeaderController::class, 'calendarIndex'])
@@ -268,6 +286,9 @@ Route::middleware(['auth', 'role:leader'])
         Route::get('notifications', [LeaderController::class, 'notifications'])->name('notifications');
         Route::get('notes', [LeaderController::class, 'notes'])->name('notes');
         Route::get('profile', [LeaderController::class, 'profile'])->name('profile');
+        Route::get('/users/{user}', function (User $user) {
+                return view('users.profile', compact('user'));
+            })->name('users.profile');
         Route::get('folders', [LeaderController::class, 'folders'])->name('folders');
 
 

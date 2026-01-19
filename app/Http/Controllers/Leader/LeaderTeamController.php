@@ -40,13 +40,31 @@ class LeaderTeamController extends Controller
 
     public function show(Team $team)
     {
-        if ($team->leader_id !== Auth::id()) {
+        if ($team->leader_id !== Auth::id() && !$team->members()->where('user_id', auth()->id())->exists()) {
             abort(403);
         }
 
         $team->load(['members', 'pendingMembers', 'projects.tasks']);
 
-        return view('leader.team.show', compact('team'));
+        // Eager loading optimisé pour éviter N+1
+        /*$team->load([
+            'members.tasks' => fn($q) => $q->whereIn('project_id', $team->projects->pluck('id')),
+            'pendingMembers',
+            'projects.tasks.assignedTo',
+        ]);*/
+
+        // Récupère les IDs des membres déjà dans l'équipe (acceptés)
+        $memberIds = $team->members->pluck('id')->all(); // safe : collection déjà chargée ---after add getmbrAttributs can use that :: $memberIds = $team->member_ids; // propre et lisible
+        // IMPORTANT : récupère les utilisateurs NON encore dans l'équipe (pour l'invitation)
+        $availableUsers = User::whereNotIn('id', $memberIds)
+                            // $team->users->pluck('id') ?? collect()->pluck('id'))
+                            ->where('id', '!=', auth()->id()) // exclure soi-même
+                            ->orderBy('name')
+                            ->get(['id', 'name', 'email']); // on prend seulement ce qu'il faut
+                            //->get();
+
+        return view('leader.team.show', compact('team', 'availableUsers'));
+        //return view('leader.team.show', compact('team'));
     }
     public function edit(Team $team)
     {
@@ -117,4 +135,80 @@ class LeaderTeamController extends Controller
 
         return back()->with('error', 'Invalid action.');
     }
+
+    public function promote(Team $team, User $user)
+    {
+        if ($team->leader_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $team->users()->updateExistingPivot($user->id, ['role' => 'admin']);
+
+        return back()->with('success', "{$user->name} est maintenant Admin de l'équipe.");
+    }
+
+    public function demote(Team $team, User $user)
+    {
+        if ($team->leader_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $team->users()->updateExistingPivot($user->id, ['role' => 'member']);
+
+        return back()->with('success', "{$user->name} est revenu au rôle Membre.");
+    }
+
+    public function inviteBySearch(Request $request, Team $team)
+    {
+        $request->validate(['user_id' => 'required|exists:users,id']);
+
+        $user = User::findOrFail($request->user_id);
+
+        // Ici tu peux parser le search pour trouver l'ID (ex: extraire entre parenthèses)
+        // Pour simplifier, on suppose que tu envoies directement user_id via JS ou hidden input
+        // Version basique : cherche par name/email
+        $users = User::where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('email', 'like', '%' . $request->search . '%')
+                    ->first();
+
+        if (!$users) {
+            return back()->with('error', 'Utilisateur non trouvé.');
+        }
+
+        if ($team->users()->where('user_id', $user->id)->exists()) {
+            return back()->with('error', 'Ce membre est déjà dans l\'équipe.');
+        }
+        if ($team->users()->where('user_id', $users->id)->exists()) {
+            return back()->with('error', 'Ce membre est déjà dans l\'équipe.');
+        }
+
+        // Ajoute en pending avec rôle member
+        $team->users()->attach($user->id, [
+            'status' => 'pending',
+            'accepted' => false,
+            'role' => 'member'
+        ]);
+         $team->users()->attach($users->id, [
+            'status' => 'pending',
+            'accepted' => false,
+            'role' => 'member'
+        ]);
+
+        // TODO: envoyer notification au user (on peut le faire plus tard)
+
+        return back()->with('success', "Invitation envoyée à {$user->name}.");
+        //return back()->with('success', "Invitation envoyée à {$users->name}.");
+    }
+
+    public function regenerateCode(Team $team)
+    {
+        if ($team->leader_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $team->regenerateInviteCode();
+        return back()->with('success', 'Nouveau code d\'invitation généré.');
+    }
+
+
 }

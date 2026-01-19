@@ -22,11 +22,11 @@
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <!-- FullCalendar (via CDN, pas de build lourd @ 6.1.15)    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
     -->
     <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
     <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!--     @ filepondStyles
@@ -47,12 +47,15 @@
         <div class="d-flex flex-grow-1">
             <!-- Sidebar latérale (fixe à gauche) Pro -->
             @include('components.sidebar')
-              <!-- Main Content Area -->
-            <main class="py-4 flex-grow-1 overflow-auto" style="margin-left: 25vw; min-width: 0;">
+              <!-- Main Content Area 25vw-->
+            <main class="py-4 flex-grow-1 overflow-auto" style="margin-top: 56px; margin-left: 22vw; padding: 20px; min-width: 0;">
                 <div class="p-4 p-md-5">
                     @yield('contentW')
                 </div>
             </main>
+            <!--main class="transition-all" style="min-height: calc(100vh - 56px); margin-top: 56px; margin-left: 280px; padding: 20px;">
+                @ yield('contentW')
+            </!--main-->
         </div>
 
         {{-- Tailwind ::class="fixed bottom-6 right-6 w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:bg-blue-600 hover:scale-110 transition-all duration-300 opacity-0 pointer-events-none z-50"
@@ -91,9 +94,11 @@
 
     <!-- Bootstrap JS + Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!--script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></!--script-->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
-    <!-- script of Calendrier visuel des deadlines :: FullCalendar (via CDN, pas de build lourd) @ 6.1.15    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <!-- script of Calendrier visuel des deadlines :: FullCalendar (via CDN, pas de build lourd) @ 6.1.15
+         <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     -->
 
     <script src="https://unpkg.com/dropzone@6/dist/dropzone-min.js"></script>

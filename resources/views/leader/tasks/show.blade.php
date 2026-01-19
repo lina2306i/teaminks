@@ -32,6 +32,7 @@
                     <a href="{{ route('leader.tasks.index') }}" class="btn btn-outline-light">
                         ← Back to Tasks
                     </a>
+                    <a href="{{ route('leader.tasks.kanban') }}" class="btn btn-primary">Kanban Global</a>
                     <h1 class="display-6 fw-bold text-white mb-0">
                         Task : {{ $task->title }}
                     </h1>

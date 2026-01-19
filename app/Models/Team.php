@@ -40,19 +40,41 @@ class Team extends Model
             $team->invite_code = $code;
         });
     }
-
+    // Méthode pour régénérer le code d'invitation
+    public function regenerateInviteCode()
+    {
+        $this->invite_code = Str::random(8);
+        $this->save();
+    }
     // Relations
 
 
     /**
      * Membres de l’équipe
      */
+    /* // Relation avec les membres (table pivot team_members)
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'team_members', 'team_id', 'user_id')
+                    ->withPivot('status', 'role') // ajoute les colonnes pivot que tu utilises
+                    ->withTimestamps();
+    }
+
+    // Scope ou accesseur pour les membres acceptés
+    public function members()
+    {
+        return $this->users()->wherePivot('status', 'accepted');
+    }
+        , 'team_id', 'user_id'
+        */
     public function members()
     {
         return $this->belongsToMany(User::class, 'team_members')
                     ->wherePivot('status', 'accepted')
                     ->withPivot('role', 'status')
+                    ->withPivot('created_at', 'updated_at')
                     ->withTimestamps();
+        //return $this->users()->wherePivot('role', 'member');
     }
 
     /**
@@ -61,8 +83,13 @@ class Team extends Model
     public function leader()
     {
         return $this->belongsTo(User::class, 'leader_id');
+        //return $this->users()->wherePivot('role', 'leader')->first();
     }
 
+    public function admins()
+    {
+        return $this->users()->wherePivot('role', 'admin');
+    }
 
     /** leader interface ...
      * Membres en attente de validation
@@ -72,11 +99,17 @@ class Team extends Model
         return $this->belongsToMany(User::class, 'team_members')
                     ->wherePivot('status', 'pending')
                     ->withTimestamps();
+        //return $this->users()->wherePivot('accepted', false);
+    }
+
+    public function getMemberIdsAttribute()
+    {
+        return $this->members->pluck('id')->all();
     }
 
     public function projects()
     {
-        return $this->hasMany(Project::class);
+        return $this->hasMany(Project::class, 'team_id');
     }
 
     public function posts()

@@ -48,12 +48,13 @@
                         <div class="col-lg-8 col-xl-7">
                             <div class="card bg-gray-800 text-white shadow-lg border-0 rounded-xl hover:shadow-xl hover:border-blue-500 transition-all">
                                 <div class="card-body p-5">
-                                    <!-- Author + Date + Actions (Edit/Delete) -->
+                                    <!-- Author + Date + Actions (Edit/Delete) class="w-12 h-12 rounded-full border-2 border-blue-500 object-cover"> -->
                                     <div class="d-flex align-items-center justify-content-between mb-4">
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="{{ $post->user->profile ?? asset('images/default-avatar.png') }}"
+                                            <img src="{{ $post->user->profile ?? asset('images/user-default.jpg') }}"
                                                 alt="Profile"
-                                                class="w-12 h-12 rounded-full border-2 border-blue-500 object-cover">
+                                                   class="rounded-circle me-3 shadow-sm" width="50" height="50">
+
                                             <div>
                                                 <strong class="fw-bold">{{ $post->user->name }}</strong>
                                                 <small class="text-gray-400 d-block">

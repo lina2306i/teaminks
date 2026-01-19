@@ -96,3 +96,23 @@
             opacity: 1 !important;
             pointer-events: auto !important;
         }
+
+
+        /*  interface kanban */
+        /* Dans ton fichier CSS */
+.ghost {
+    background-color: rgba(var(--bs-primary-rgb), 0.2) !important;
+    opacity: 0.5 !important;
+    border: 2px dashed var(--bs-primary) !important;
+}
+
+.chosen {
+    background-color: rgba(var(--bs-info-rgb), 0.3) !important;
+    opacity: 0.8 !important;
+}
+
+.dragging {
+    opacity: 0.7 !important;
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+}

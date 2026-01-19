@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Leader;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Project;
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -483,7 +484,106 @@ class LeaderTaskController extends Controller
         }
     }
 
+    // fct for Ajax status update :: in Kanban Board pour les tâches (effet "waouh" garanti)
+    public function kanbanv0(Project $project = null)
+    {
+        $tasks = Task::with(['assignedTo', 'project'])
+            ->when($project, fn($q) => $q->where('project_id', $project->id))
+            ->get()
+           // ->groupBy('status');
+            ->groupBy(function ($task) {
+                return $task->assigned_to ? $task->status : 'unassigned';
+            });
 
+        return view('leader.tasks.kanban', compact('tasks', 'project'));
+    }
+    public function kanban(Request $request, Project $project = null)
+    {
+        $user = Auth::user();
+
+        $query = Task::with(['assignedTo', 'project']) ;
+        /*
+            ->where(function ($q) use ($user, $project) {
+                // Si on est dans un projet spécifique
+                if ($project) {
+                    $q->where('project_id', $project->id);
+                }
+                // Sinon : toutes les tâches des projets où l'utilisateur est impliqué
+                else {
+                    $q->whereIn('project_id', $user->projects()->pluck('id'))
+                    ->orWhereIn('project_id', $user->ownedProjects()->pluck('id'));
+                }
+            });*/
+
+        // Cas 1 : Projet spécifique passé en paramètre d'URL
+        if ($project) {
+            $query->where('project_id', $project->id);
+        }
+        // Cas 2 : Équipe passée en query string (?team=14)
+        elseif (request()->filled('team')) {
+            $team = Team::findOrFail(request('team'));
+
+            // Vérifie que l'utilisateur est leader ou membre de l'équipe
+            if ($team->leader_id !== $user->id && !$team->users->contains($user->id)) {
+                abort(403, 'Vous n\'êtes pas membre de cette équipe.');
+            }
+
+            // Toutes les tâches des projets de cette équipe
+            $query->whereIn('project_id', $team->projects->pluck('id'));
+        }
+        // Cas 3 : Global (toutes les tâches de l'utilisateur)
+        else {
+            $query->whereIn('project_id', $user->projects->pluck('id'))
+                ->orWhereIn('project_id', $user->ownedProjects->pluck('id'));
+        }
+        /* Si team est passé en query string (optionnel)
+        if (request()->has('team')) {
+            $team = Team::findOrFail(request('team'));
+            $query->whereIn('project_id', $team->projects->pluck('id'));
+        }*/
+
+        //$tasks = $query->get()->groupBy('status');
+        $allTasks = $query->get();
+
+        // On groupe par status réel
+        $grouped = $allTasks->groupBy('status');
+
+        // Colonne spéciale Overdue : tâches non terminées ET date passée
+        /*$tasks['overdue'] = $query->get()
+            ->where('status', '!=', 'completed')
+            ->whereNotNull('end_date')
+            ->where('end_date', '<', now());*/
+        // On crée les colonnes virtuelles /calculées
+         $tasks = [
+
+            'unassigned'  => $grouped->get('todo', collect())->whereNull('assigned_to'),
+            'todo'        => $grouped->get('todo', collect())->whereNotNull('assigned_to'),
+            'in_progress' => $grouped->get('in_progress', collect()),
+            'overdue'     => $allTasks->whereIn('status', ['todo', 'in_progress'])
+                                    ->whereNotNull('due_date')
+                                    ->where('due_date', '<', now()),
+            'completed'   => $grouped->get('completed', collect()),
+        ];
+
+
+        return view('leader.tasks.kanban', compact('tasks', 'project'));
+    }
+
+
+    public function updateStatus(Request $request, Task $task)
+    {
+        $request->validate(['status' => 'required|in:todo,in_progress,completed']);
+
+        // Sécurité : vérifier que l'utilisateur peut modifier cette tâche
+        if ($task->project->leader_id !== auth()->id() && !$task->project->users->contains(auth()->id())) {
+            //abort(403);
+            return response()->json(['success' => false, 'message' => 'Non autorisé'], 403);
+        }
+
+        $task->update(['status' => $request->status]);
+
+        return response()->json(['success' => true, 'new_status' => $task->status]);
+    }
 
 
 

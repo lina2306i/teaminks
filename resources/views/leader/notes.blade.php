@@ -25,6 +25,19 @@
         </div>
     </div>
 
+    <!-- leader/note.blade.php -->
+    <div class="card">
+        <div class="card-header">Note du jour – {{ today()->format('d/m/Y') }}</div>
+        <div class="card-body">
+            <form method="POST" action="{{ route('leader.note') }}">
+                @csrf
+                <input type="text" name="title" placeholder="Titre" class="form-control mb-3">
+                <textarea name="content" rows="6" placeholder="Votre note personnelle..." class="form-control"></textarea>
+                <button type="submit" class="btn btn-primary mt-3">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal pour créer une note -->
     <div class="modal fade" id="newNoteModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -33,7 +46,7 @@
                     <h5 class="modal-title">Nouvelle note</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('leader.notes.store') }}" method="POST">
+                <form action="{{ route('leader.notes') }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
@@ -53,5 +66,7 @@
             </div>
         </div>
     </div>
+
+
 </section>
 @endsection

@@ -43,6 +43,8 @@ class Project extends Model
         ];
     }*/
 
+    protected $dates = ['start_date', 'end_date'];
+
     protected $appends = ['progress', 'is_overdue'];
     /**
      * Le leader / créateur du projet
@@ -178,6 +180,7 @@ class Project extends Model
     public function getMembersCountAttribute(): int
     {
         return $this->team ? $this->team->members()->count() : 0;
+        //return $this->users()->count();
     }
 
 

@@ -1,0 +1,336 @@
+<nav class="navbar navbar-expand-md bg-gray-900 shadow-lg border-bottom border-gray-700 fixed-top" style="z-index: 1030;">
+    <div class="container-fluid px-3">
+        <!-- Bouton hamburger pour toggle sidebar -->
+        <button class="btn btn-outline-secondary border-0 d-lg-none" type="button" id="sidebarToggleMobile">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Logo + Nom de l'app -->
+        <a class="navbar-brand d-flex align-items-center text-white fw-bold ms-2 ms-lg-0" href="{{ route('home') }}">
+            <img src="{{ asset('images/logo5-ssbg.png') }}" alt="Team logo"
+                     class="me-2 logo-img " style="height: 45px;">
+            <span class="fs-4 d-none d-md-block fw-bold"> Team<span class="text-primary">inks</span>
+        </a>
+
+
+        <!-- Bouton collapse pour mobile (tablette/mobile) -->
+        <button class="navbar-toggler border-0 d-md-none d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="fas fa-ellipsis-v text-white"></i>
+        </button>
+
+        <!-- Contenu du menu -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <!-- Liens centrés (visible sur desktop > 992px) -->
+            <ul class="navbar-nav mx-auto d-none d-lg-flex">
+                <li class="nav-item">
+                    <a class="nav-link text-white px-3 {{ request()->routeIs('leader.dashboard') ? 'active' : '' }}"
+                       href="{{ route('leader.dashboard') }}">
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white px-3 {{ request()->routeIs('leader.team.*') ? 'active' : '' }}"
+                       href="{{ route('leader.team.index') }}">
+                        Team
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white px-3 {{ request()->routeIs('leader.projects.*') ? 'active' : '' }}"
+                       href="{{ route('leader.projects.index') }}">
+                        Projects
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Liens à droite -->
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
+                <!-- Search Bar (visible sur tablette et desktop) -->
+                <li class="nav-item d-none d-md-block">
+                    <div class="input-group" style="max-width: 250px;">
+                        <input type="text" class="form-control bg-gray-800 border-gray-700 text-white"
+                               placeholder="Search..." aria-label="Search">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </li>
+
+                <!-- Notifications -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link text-white position-relative" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bell fs-5"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                            3
+                        </span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end bg-gray-800 border-gray-700 p-2" style="min-width: 300px;">
+                        <h6 class="dropdown-header text-white">Notifications</h6>
+                        <div class="dropdown-item text-white">
+                            <small>Nouvelle tâche assignée</small>
+                        </div>
+                        <div class="dropdown-divider bg-gray-600"></div>
+                        <a class="dropdown-item text-white text-center" href="{{ route('leader.notifications') }}">
+                            Voir toutes
+                        </a>
+                    </div>
+                </li>
+
+                <!-- User Profile Dropdown -->
+                @auth
+                <li class="nav-item dropdown">
+                    <a id="navbarDropdown" class="nav-link dropdown-toggle text-white d-flex align-items-center gap-2"
+                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ auth()->user()->profile ?? asset('images/logo5.png') }}"
+                             alt="Profile" class="rounded-circle" style="width: 32px; height: 32px;">
+                        <span class="d-none d-md-inline">{{ Auth::user()->name }}</span>
+                        <small class="d-none d-lg-inline text-gray-400">({{ Auth::user()->role }})</small>
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-end bg-gray-800 border-gray-700">
+                        <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2 d-flex align-items-center gap-2"
+                           href="{{ route('leader.profile') }}">
+                            <i class="fas fa-user"></i> Profil
+                        </a>
+                        <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2 d-flex align-items-center gap-2"
+                           href="{{ route('leader.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2 d-flex align-items-center gap-2"
+                           href="{{-- route('leader.settings') --}}">
+                            <i class="fas fa-cog"></i> Paramètres
+                        </a>
+                        <div class="dropdown-divider bg-gray-600"></div>
+                        <a class="dropdown-item text-white hover:bg-gray-700 px-4 py-2 d-flex align-items-center gap-2"
+                           href="{{ route('logout') }}"
+                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            <i class="fas fa-sign-out-alt"></i> {{ __('Logout') }}
+                        </a>
+                    </div>
+                </li>
+                @else
+                <!-- Login/Register pour non connectés -->
+                <li class="nav-item">
+                    <a class="nav-link text-white px-3 {{ request()->routeIs('login') ? 'active' : '' }}"
+                       href="{{ route('login.form') }}">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-primary px-3" href="{{ route('register.form') }}">
+                        Register
+                    </a>
+                </li>
+                @endauth
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Bouton flottant pour mobile (bas gauche) -->
+<button class="btn btn-primary rounded-circle p-3 position-fixed d-lg-none"
+        style="bottom: 20px; left: 20px; z-index: 1020; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
+        id="sidebarToggleFloat">
+    <i class="fas fa-bars fs-5"></i>
+</button>
+
+@push('script')
+   <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const navbarToggleMobile = document.getElementById('sidebarToggleMobile');
+            const sidebarToggleFloat = document.getElementById('sidebarToggleFloat');
+            let isTabletOrMobile = false;
+
+            // Fonction pour vérifier la taille d'écran
+            function checkScreenSize() {
+                const width = window.innerWidth;
+
+                // Desktop (> 992px)
+                if (width > 992) {
+                    sidebar.style.width = '280px';
+                    sidebar.style.transform = 'translateX(0)';
+                    overlay.style.display = 'none';
+                    document.querySelector('main').style.marginLeft = '280px';
+                    isTabletOrMobile = false;
+
+                    // Afficher les textes
+                    document.querySelectorAll('.sidebar-text').forEach(el => {
+                        el.classList.remove('d-none');
+                    });
+                }
+                // Tablette (768-992px)
+                else if (width >= 768 && width <= 992) {
+                    sidebar.style.width = '80px';
+                    sidebar.style.transform = 'translateX(0)';
+                    overlay.style.display = 'none';
+                    document.querySelector('main').style.marginLeft = '80px';
+                    isTabletOrMobile = true;
+
+                    // Cacher les textes, montrer icônes seulement
+                    document.querySelectorAll('.sidebar-text').forEach(el => {
+                        el.classList.add('d-none');
+                    });
+                }
+                // Mobile (< 768px)
+                else {
+                    sidebar.style.width = '280px';
+                    sidebar.style.transform = 'translateX(-100%)';
+                    document.querySelector('main').style.marginLeft = '0';
+                    isTabletOrMobile = true;
+
+                    // Montrer les textes pour mobile quand sidebar ouverte
+                    document.querySelectorAll('.sidebar-text').forEach(el => {
+                        el.classList.remove('d-none');
+                    });
+                }
+            }
+
+            // Fonction pour toggle sidebar
+            function toggleSidebar() {
+                if (window.innerWidth < 768) {
+                    // Mobile: sidebar glissante
+                    if (sidebar.style.transform === 'translateX(-100%)' || sidebar.style.transform === '') {
+                        sidebar.style.transform = 'translateX(0)';
+                        overlay.style.display = 'block';
+                    } else {
+                        sidebar.style.transform = 'translateX(-100%)';
+                        overlay.style.display = 'none';
+                    }
+                } else if (window.innerWidth <= 992) {
+                    // Tablette: toggle entre 80px et 280px
+                    if (sidebar.style.width === '80px') {
+                        sidebar.style.width = '280px';
+                        document.querySelectorAll('.sidebar-text').forEach(el => {
+                            el.classList.remove('d-none');
+                        });
+                    } else {
+                        sidebar.style.width = '80px';
+                        document.querySelectorAll('.sidebar-text').forEach(el => {
+                            el.classList.add('d-none');
+                        });
+                    }
+                }
+            }
+
+            // Événements
+            navbarToggleMobile?.addEventListener('click', toggleSidebar);
+            sidebarToggleFloat?.addEventListener('click', toggleSidebar);
+            overlay?.addEventListener('click', toggleSidebar);
+
+            // Fermer sidebar en cliquant en dehors (mobile)
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 768 &&
+                    !sidebar.contains(event.target) &&
+                    !navbarToggleMobile.contains(event.target) &&
+                    !sidebarToggleFloat.contains(event.target) &&
+                    sidebar.style.transform === 'translateX(0)') {
+                    toggleSidebar();
+                }
+            });
+
+            // Vérifier la taille d'écran au chargement et au redimensionnement
+            checkScreenSize();
+            window.addEventListener('resize', checkScreenSize);
+        });
+    </script>
+@endpush
+
+@push('styles')
+<style>
+/* Styles généraux */
+.transition-all {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Overlay pour mobile */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1020;
+    backdrop-filter: blur(2px);
+}
+
+/* Styles responsive */
+@media (max-width: 992px) {
+    aside#sidebar {
+        width: 80px !important;
+        min-width: 80px !important;
+    }
+
+    aside#sidebar .sidebar-text,
+    aside#sidebar .d-md-block:not(.d-lg-inline) {
+        display: none !important;
+    }
+
+    main {
+        margin-left: 80px !important;
+        transition: margin-left 0.3s ease;
+    }
+
+    .navbar-toggler {
+        display: block !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    aside#sidebar {
+        width: 280px !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    main {
+        margin-left: 0 !important;
+        transition: margin-left 0.3s ease;
+    }
+
+    .navbar-toggler {
+        display: none;
+    }
+
+    /* Bouton flottant spécifique mobile */
+    #sidebarToggleFloat {
+        display: block !important;
+    }
+}
+
+@media (min-width: 993px) {
+    /* Cacher le bouton flottant sur desktop */
+    #sidebarToggleFloat,
+    #sidebarToggleMobile {
+        display: none !important;
+    }
+}
+
+/* Styles pour les états actifs */
+.nav-link.active {
+    background-color: #374151 !important;
+    color: white !important;
+}
+
+/* Scrollbar personnalisée */
+aside::-webkit-scrollbar {
+    width: 6px;
+}
+
+aside::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+aside::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 3px;
+}
+
+aside::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+    </style>
+@endpush
